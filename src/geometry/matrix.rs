@@ -38,19 +38,19 @@ impl Matrix {
     /// Returns the transformed X component of a `Vector`.
     #[must_use]
     pub const fn transform_x(&self, vector: &Vector) -> f32 {
-        vector.x() * self.columns.0.0 + vector.y() * self.columns.1.0
+        vector.x * self.columns.0.0 + vector.y * self.columns.1.0
     }
 
     /// Returns the transformed Y component of a `Vector`.
     #[must_use]
     pub const fn transform_y(&self, vector: &Vector) -> f32 {
-        vector.x() * self.columns.0.1 + vector.y() * self.columns.1.1
+        vector.x * self.columns.0.1 + vector.y * self.columns.1.1
     }
 
     /// Returns the transformed Z component of a `Vector`.
     #[must_use]
-    pub fn transform_z(&self, vector: &Vector) -> f32 {
-        vector.z() * self.scale()
+    pub const fn transform_z(&self, vector: &Vector) -> f32 {
+        vector.z * self.scale
     }
 }
 
@@ -60,7 +60,7 @@ impl Angle for Matrix {
     }
 
     fn set_angle(&mut self, value: f32) {
-        *self = Self::new(value, self.scale());
+        *self = Self::new(value, self.scale);
     }
 }
 
@@ -70,7 +70,7 @@ impl Scale for Matrix {
     }
 
     fn set_scale(&mut self, value: f32) {
-        *self = Self::new(self.angle(), value);
+        *self = Self::new(self.angle, value);
     }
 }
 
@@ -119,22 +119,22 @@ mod tests {
         let angle = geometry::into_rads(45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(-135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(-45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
     }
 
@@ -147,22 +147,22 @@ mod tests {
         let angle = geometry::into_rads(45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(-135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(-45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
     }
 
@@ -175,22 +175,22 @@ mod tests {
         let angle = geometry::into_rads(45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(-135.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(-45.0);
         assert_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
-            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z()
+            (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
     }
 

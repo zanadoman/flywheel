@@ -2,11 +2,11 @@ use super::Vector;
 
 /// Represents an object that has a position.
 pub trait Position {
-    /// Returns a reference to the position `Vector` of the object.
+    /// Returns the position of the object.
     fn position(&self) -> &Vector;
 
-    /// Returns a mutable reference to the position `Vector` of the object.
-    fn position_mut(&mut self) -> &mut Vector;
+    /// Sets the position of the object.
+    fn set_position(&mut self, value: &Vector);
 }
 
 /// Represents an object that has an angle.

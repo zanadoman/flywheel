@@ -9,9 +9,12 @@ use super::Angle;
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vector {
-    x: f32,
-    y: f32,
-    z: f32,
+    /// X component of the `Vector`.
+    pub x: f32,
+    /// Y component of the `Vector`.
+    pub y: f32,
+    /// Z component of the `Vector`.
+    pub z: f32,
 }
 
 impl Vector {
@@ -27,159 +30,134 @@ impl Vector {
         Self::new(angle.cos() * magnitude2, angle.sin() * magnitude2, z)
     }
 
-    /// Returns the X component of the `Vector`.
-    #[must_use]
-    pub const fn x(&self) -> f32 {
-        self.x
-    }
-
-    /// Sets the X component of the `Vector`.
-    pub const fn set_x(&mut self, value: f32) {
-        self.x = value;
-    }
-
-    /// Returns the Y component of the `Vector`.
-    #[must_use]
-    pub const fn y(&self) -> f32 {
-        self.y
-    }
-
-    /// Sets the Y component of the `Vector`.
-    pub const fn set_y(&mut self, value: f32) {
-        self.y = value;
-    }
-
-    /// Returns the Z component of the `Vector`.
-    #[must_use]
-    pub const fn z(&self) -> f32 {
-        self.z
-    }
-
-    /// Sets the Z component of the `Vector`.
-    pub const fn set_z(&mut self, value: f32) {
-        self.z = value;
-    }
-
     /// Calculates the 2D magnitude of the `Vector`.
     #[must_use]
     pub fn magnitude2(&self) -> f32 {
-        self.x().hypot(self.y())
+        self.x.hypot(self.y)
     }
 
     /// Calculates the 3D magnitude of the `Vector`.
     #[must_use]
     pub fn magnitude3(&self) -> f32 {
-        self.z()
-            .mul_add(self.z(), self.y().mul_add(self.y(), self.x().powi(2)))
-            .sqrt()
+        self.magnitude2().hypot(self.z)
     }
 
     /// Constructs a new 2D unit `Vector` from the `Vector`.
     #[must_use]
-    pub fn normalize2(&self) -> Self {
+    pub fn normalize2(mut self) -> Self {
         let magnitude2 = self.magnitude2();
         if magnitude2 == 0.0 {
-            Self::new(0.0, 0.0, 0.0)
+            self.x = 0.0;
+            self.y = 0.0;
         } else {
-            Self::new(self.x() / magnitude2, self.y() / magnitude2, 0.0)
+            self.x /= magnitude2;
+            self.y /= magnitude2;
         }
+        self.z = 0.0;
+        self
     }
 
     /// Constructs a new 3D unit `Vector` from the `Vector`.
     #[must_use]
-    pub fn normalize3(&self) -> Self {
+    pub fn normalize3(mut self) -> Self {
         let magnitude3 = self.magnitude3();
         if magnitude3 == 0.0 {
-            Self::new(0.0, 0.0, 0.0)
+            self.x = 0.0;
+            self.y = 0.0;
+            self.z = 0.0;
         } else {
-            Self::new(
-                self.x() / magnitude3,
-                self.y() / magnitude3,
-                self.z() / magnitude3,
-            )
+            self /= magnitude3;
         }
+        self
     }
 }
 
 impl Angle for Vector {
     fn angle(&self) -> f32 {
-        self.y().atan2(self.x())
+        self.y.atan2(self.x)
     }
 
     fn set_angle(&mut self, value: f32) {
-        *self = Self::from_angle(value, self.magnitude2(), self.z());
+        *self = Self::from_angle(value, self.magnitude2(), self.z);
     }
 }
 
 impl Neg for Vector {
     type Output = Self;
 
-    fn neg(self) -> Self::Output {
-        Self::Output::new(-self.x(), -self.y(), -self.z())
+    fn neg(mut self) -> Self::Output {
+        self.x = -self.x;
+        self.y = -self.y;
+        self.z = -self.z;
+        self
     }
 }
 
 impl Add<Self> for Vector {
     type Output = Self;
 
-    fn add(self, rhs: Self::Output) -> Self::Output {
-        Self::Output::new(
-            self.x() + rhs.x(),
-            self.y() + rhs.y(),
-            self.z() + rhs.z(),
-        )
+    fn add(mut self, rhs: Self::Output) -> Self::Output {
+        self += rhs;
+        self
     }
 }
 
 impl AddAssign<Self> for Vector {
     fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs;
+        self.x += rhs.x;
+        self.y += rhs.y;
+        self.z += rhs.z;
     }
 }
 
 impl Sub<Self> for Vector {
     type Output = Self;
 
-    fn sub(self, rhs: Self::Output) -> Self::Output {
-        Self::Output::new(
-            self.x() - rhs.x(),
-            self.y() - rhs.y(),
-            self.z() - rhs.z(),
-        )
+    fn sub(mut self, rhs: Self::Output) -> Self::Output {
+        self -= rhs;
+        self
     }
 }
 
 impl SubAssign<Self> for Vector {
     fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+        self.z -= rhs.z;
     }
 }
 
 impl Mul<f32> for Vector {
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self::Output {
-        Self::Output::new(self.x() * rhs, self.y() * rhs, self.z() * rhs)
+    fn mul(mut self, rhs: f32) -> Self::Output {
+        self *= rhs;
+        self
     }
 }
 
 impl MulAssign<f32> for Vector {
     fn mul_assign(&mut self, rhs: f32) {
-        *self = *self * rhs;
+        self.x *= rhs;
+        self.y *= rhs;
+        self.z *= rhs;
     }
 }
 
 impl Div<f32> for Vector {
     type Output = Self;
 
-    fn div(self, rhs: f32) -> Self::Output {
-        Self::Output::new(self.x() / rhs, self.y() / rhs, self.z() / rhs)
+    fn div(mut self, rhs: f32) -> Self::Output {
+        self /= rhs;
+        self
     }
 }
 
 impl DivAssign<f32> for Vector {
     fn div_assign(&mut self, rhs: f32) {
-        *self = *self / rhs;
+        self.x /= rhs;
+        self.y /= rhs;
+        self.z /= rhs;
     }
 }
 
@@ -195,9 +173,9 @@ mod tests {
         const Y: f32 = 3.0;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(X, Y, Z);
-        assert_eq!(VECTOR.x(), X);
-        assert_eq!(VECTOR.y(), Y);
-        assert_eq!(VECTOR.z(), Z);
+        assert_eq!(VECTOR.x, X);
+        assert_eq!(VECTOR.y, Y);
+        assert_eq!(VECTOR.z, Z);
     }
 
     #[test]
@@ -225,30 +203,6 @@ mod tests {
         assert_eq!(vector.angle(), angle);
         assert_eq!(vector.magnitude2(), MAGNITUDE2);
         assert_eq!(vector.magnitude3(), MAGNITUDE3);
-    }
-
-    #[test]
-    fn set_x() {
-        const X: f32 = 7.0;
-        let mut vector = Vector::new(2.0, 3.0, 6.0);
-        vector.set_x(X);
-        assert_eq!(vector.x(), X);
-    }
-
-    #[test]
-    fn set_y() {
-        const Y: f32 = 7.0;
-        let mut vector = Vector::new(2.0, 3.0, 6.0);
-        vector.set_y(Y);
-        assert_eq!(vector.y(), Y);
-    }
-
-    #[test]
-    fn set_z() {
-        const Z: f32 = 7.0;
-        let mut vector = Vector::new(2.0, 3.0, 6.0);
-        vector.set_z(Z);
-        assert_eq!(vector.z(), Z);
     }
 
     #[test]

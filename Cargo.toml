@@ -1,10 +1,11 @@
 [package]
 name = "flywheel"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 description = "Open-source, cross-platform 2.5D game engine built on SDL3."
-repository = "https://github.com/zanadoman/flywheel"
-license-file = "./LICENSE"
+documentation = "https://docs.rs/flywheel/latest/flywheel/"
+repository = "https://github.com/zanadoman/flywheel/"
+license-file = "LICENSE"
 keywords = ["game", "engine", "gamedev", "graphics", "flywheel"]
 categories = ["game-engines", "graphics", "rendering"]
 
