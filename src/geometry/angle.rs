@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use core::f32::consts::PI;
 
 /// Converts degrees to radians.
 #[must_use]
