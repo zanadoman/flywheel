@@ -1,14 +1,8 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#![deny(warnings)]
+#![warn(missing_docs)]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+//! `Flywheel Engine` - 2D cross-platform game engine built on `SDL3`.
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+/// `Flywheel Engine` [geometry] module.
+#[forbid(unsafe_code)]
+pub mod geometry;
