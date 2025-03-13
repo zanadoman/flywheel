@@ -1,1 +1,5 @@
+*.vim
+.idea
+.vscode
+/Cargo.lock
 /target
