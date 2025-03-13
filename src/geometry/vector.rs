@@ -16,16 +16,19 @@ pub struct Vector {
 
 impl Vector {
     /// Constructs a new `Vector` from the given X, Y, Z components.
+    #[must_use]
     pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
 
     /// Constructs a new `Vector` from the given angle, 2D magnitude, Z component.
+    #[must_use]
     pub fn from_angle(angle: f32, magnitude2: f32, z: f32) -> Self {
         Self::new(angle.cos() * magnitude2, angle.sin() * magnitude2, z)
     }
 
     /// Returns the X component of the `Vector`.
+    #[must_use]
     pub const fn x(&self) -> f32 {
         self.x
     }
@@ -36,6 +39,7 @@ impl Vector {
     }
 
     /// Returns the Y component of the `Vector`.
+    #[must_use]
     pub const fn y(&self) -> f32 {
         self.y
     }
@@ -46,6 +50,7 @@ impl Vector {
     }
 
     /// Returns the Z component of the `Vector`.
+    #[must_use]
     pub const fn z(&self) -> f32 {
         self.z
     }
@@ -56,36 +61,42 @@ impl Vector {
     }
 
     /// Calculates the 2D magnitude of the `Vector`.
+    #[must_use]
     pub fn magnitude2(&self) -> f32 {
-        (self.x().powf(2.0) + self.y().powf(2.0)).sqrt()
+        self.x().hypot(self.y())
     }
 
     /// Calculates the 3D magnitude of the `Vector`.
+    #[must_use]
     pub fn magnitude3(&self) -> f32 {
-        (self.x().powf(2.0) + self.y().powf(2.0) + self.z().powf(2.0)).sqrt()
+        self.z()
+            .mul_add(self.z(), self.y().mul_add(self.y(), self.x().powi(2)))
+            .sqrt()
     }
 
     /// Constructs a new 2D unit `Vector` from the `Vector`.
+    #[must_use]
     pub fn normalize2(&self) -> Self {
         let magnitude2 = self.magnitude2();
-        if magnitude2 != 0.0 {
-            Self::new(self.x() / magnitude2, self.y() / magnitude2, 0.0)
-        } else {
+        if magnitude2 == 0.0 {
             Self::new(0.0, 0.0, 0.0)
+        } else {
+            Self::new(self.x() / magnitude2, self.y() / magnitude2, 0.0)
         }
     }
 
     /// Constructs a new 3D unit `Vector` from the `Vector`.
+    #[must_use]
     pub fn normalize3(&self) -> Self {
         let magnitude3 = self.magnitude3();
-        if magnitude3 != 0.0 {
+        if magnitude3 == 0.0 {
+            Self::new(0.0, 0.0, 0.0)
+        } else {
             Self::new(
                 self.x() / magnitude3,
                 self.y() / magnitude3,
                 self.z() / magnitude3,
             )
-        } else {
-            Self::new(0.0, 0.0, 0.0)
         }
     }
 }
@@ -108,7 +119,7 @@ impl Neg for Vector {
     }
 }
 
-impl Add<Vector> for Vector {
+impl Add<Self> for Vector {
     type Output = Self;
 
     fn add(self, rhs: Self::Output) -> Self::Output {
@@ -120,13 +131,13 @@ impl Add<Vector> for Vector {
     }
 }
 
-impl AddAssign<Vector> for Vector {
+impl AddAssign<Self> for Vector {
     fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
     }
 }
 
-impl Sub<Vector> for Vector {
+impl Sub<Self> for Vector {
     type Output = Self;
 
     fn sub(self, rhs: Self::Output) -> Self::Output {
@@ -138,7 +149,7 @@ impl Sub<Vector> for Vector {
     }
 }
 
-impl SubAssign<Vector> for Vector {
+impl SubAssign<Self> for Vector {
     fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs;
     }

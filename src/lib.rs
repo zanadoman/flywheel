@@ -1,4 +1,7 @@
 #![deny(warnings)]
+//#![warn(clippy::cargo)]
+#![warn(clippy::nursery)]
+#![warn(clippy::pedantic)]
 #![warn(missing_docs)]
 
 //! `Flywheel Engine` - 2D cross-platform game engine built on `SDL3`.

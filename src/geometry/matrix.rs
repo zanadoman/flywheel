@@ -14,6 +14,7 @@ pub struct Matrix {
 
 impl Matrix {
     /// Constructs a new `Matrix` from the given angle, scale.
+    #[must_use]
     pub fn new(angle: f32, scale: f32) -> Self {
         let sin_scale = angle.sin() * scale;
         let cos_scale = angle.cos() * scale;
@@ -25,6 +26,7 @@ impl Matrix {
     }
 
     /// Constructs a new identity `Matrix`.
+    #[must_use]
     pub const fn identity() -> Self {
         Self {
             angle: 0.0,
@@ -34,16 +36,19 @@ impl Matrix {
     }
 
     /// Returns the transformed X component of a `Vector`.
+    #[must_use]
     pub const fn transform_x(&self, vector: &Vector) -> f32 {
         vector.x() * self.columns.0.0 + vector.y() * self.columns.1.0
     }
 
     /// Returns the transformed Y component of a `Vector`.
+    #[must_use]
     pub const fn transform_y(&self, vector: &Vector) -> f32 {
         vector.x() * self.columns.0.1 + vector.y() * self.columns.1.1
     }
 
     /// Returns the transformed Z component of a `Vector`.
+    #[must_use]
     pub fn transform_z(&self, vector: &Vector) -> f32 {
         vector.z() * self.scale()
     }

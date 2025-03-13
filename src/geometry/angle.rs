@@ -1,11 +1,13 @@
 use std::f32::consts::PI;
 
 /// Converts degrees to radians.
+#[must_use]
 pub const fn into_rads(degs: f32) -> f32 {
     degs * PI / 180.0
 }
 
 /// Converts radians to degrees.
+#[must_use]
 pub const fn into_degs(rads: f32) -> f32 {
     rads * 180.0 / PI
 }
