@@ -6,7 +6,7 @@ use super::Angle;
 
 /// 2.5D `Vector`.
 #[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vector {
     /// X component of the `Vector`.
@@ -249,6 +249,7 @@ mod tests {
 
     #[test]
     fn angle() {
+        assert_eq!(Vector::new(0.0, 0.0, 0.0).angle(), 0.0);
         assert_eq!(
             Vector::new(1.0, 1.0, 0.0).angle(),
             geometry::into_rads(45.0)
@@ -257,7 +258,6 @@ mod tests {
             Vector::new(-1.0, 1.0, 0.0).angle(),
             geometry::into_rads(135.0)
         );
-        assert_eq!(Vector::new(0.0, 0.0, 0.0).angle(), 0.0);
         assert_eq!(
             Vector::new(-1.0, -1.0, 0.0).angle(),
             geometry::into_rads(-135.0)

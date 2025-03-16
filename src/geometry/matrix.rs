@@ -2,10 +2,10 @@ use core::ops::Mul;
 
 use super::{Angle, Scale, Vector};
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 /// 2.5D transformation `Matrix`.
+#[repr(C)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Matrix {
     angle: f32,
     scale: f32,
