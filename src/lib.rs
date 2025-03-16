@@ -1,8 +1,5 @@
 #![deny(warnings)]
-#![warn(clippy::cargo)]
-#![warn(clippy::nursery)]
-#![warn(clippy::pedantic)]
-#![warn(missing_docs)]
+#![warn(clippy::cargo, clippy::nursery, clippy::pedantic, missing_docs)]
 
 //! # Flywheel Engine
 //! `Flywheel` is an open-source, cross-platform 2.5D game engine built on

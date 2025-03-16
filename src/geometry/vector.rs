@@ -6,7 +6,7 @@ use super::Angle;
 
 /// 2.5D `Vector`.
 #[repr(C)]
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Vector {
     /// X component of the `Vector`.
