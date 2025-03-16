@@ -163,9 +163,8 @@ impl DivAssign<f32> for Vector {
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry;
-
     use super::*;
+    use crate::geometry;
 
     #[test]
     fn new() {

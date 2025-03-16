@@ -11,6 +11,10 @@
 //! simplifies game development while leveraging `SDL3`'s power for smooth
 //! rendering and input handling.
 
+pub use self::geometry::{
+    Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,
+};
+
 /// `Flywheel` [geometry] module.
 #[forbid(unsafe_code)]
 pub mod geometry;

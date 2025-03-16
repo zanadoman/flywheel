@@ -88,9 +88,8 @@ impl Mul<Vector> for Matrix {
 
 #[cfg(test)]
 mod tests {
-    use crate::geometry;
-
     use super::*;
+    use crate::geometry;
 
     #[test]
     fn new() {
