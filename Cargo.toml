@@ -6,7 +6,7 @@ description = "Open-source, cross-platform 2.5D game engine built on SDL3."
 documentation = "https://docs.rs/flywheel/latest/flywheel/"
 repository = "https://github.com/zanadoman/flywheel.git"
 license = "Zlib"
-keywords = ["engine", "flywheel", "game", "gamedev", "graphics"]
+keywords = ["gamedev", "game", "graphics", "engine", "flywheel"]
 categories = ["game-engines", "rendering", "graphics"]
 
 [profile.release]

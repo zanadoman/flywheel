@@ -199,6 +199,7 @@ mod tests {
         let mut matrix = Matrix::identity();
         matrix.set_angle(ANGLE);
         assert_eq!(matrix.angle(), ANGLE);
+        assert_eq!(matrix.scale(), 1.0);
     }
 
     #[test]
@@ -207,6 +208,7 @@ mod tests {
         let mut matrix = Matrix::identity();
         matrix.set_scale(SCALE);
         assert_eq!(matrix.scale(), SCALE);
+        assert_eq!(matrix.angle(), 0.0);
     }
 
     #[test]
