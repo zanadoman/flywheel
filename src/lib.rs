@@ -10,11 +10,15 @@
 //! rendering and input handling.
 
 pub use self::{
+    ecs::Entity,
     engine::{Context, ContextData},
     geometry::{
         Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,
     },
 };
+
+/// 'Flywheel' [ecs] module.
+pub mod ecs;
 
 /// `Flywheel` [engine] module.
 #[cfg(feature = "engine")]
