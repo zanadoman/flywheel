@@ -1,3 +1,4 @@
+#![feature(extern_types, negative_impls)]
 #![deny(warnings)]
 #![warn(clippy::cargo, clippy::nursery, clippy::pedantic, missing_docs)]
 
@@ -8,9 +9,16 @@
 //! simplifies game development while leveraging `SDL3`'s power for smooth
 //! rendering and input handling.
 
-pub use self::geometry::{
-    Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,
+pub use self::{
+    engine::{Context, ContextData},
+    geometry::{
+        Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,
+    },
 };
+
+/// `Flywheel` [engine] module.
+#[cfg(feature = "engine")]
+pub mod engine;
 
 /// `Flywheel` [geometry] module.
 #[forbid(unsafe_code)]

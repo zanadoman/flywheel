@@ -1,6 +1,6 @@
 [package]
 name = "flywheel"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2024"
 description = "Open-source, cross-platform 2.5D game engine built on SDL3."
 documentation = "https://docs.rs/flywheel/latest/flywheel/"
@@ -22,4 +22,6 @@ serde = { version = "1.0.219", default-features = false, features = ["derive"], 
 approx = { version = "0.5.1", default-features = false }
 
 [features]
+default = ["engine"]
+engine = []
 serde = ["dep:serde"]
