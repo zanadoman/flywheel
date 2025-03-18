@@ -65,7 +65,7 @@ pub struct ContextData<'a> {
 ///     copyright: "Copyright (C) 2025 Example Studios",
 ///     url: "game.example.com",
 ///     r#type: "game",
-/// });
+/// }).unwrap();
 /// ```
 pub struct Context;
 

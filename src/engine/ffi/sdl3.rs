@@ -13,7 +13,7 @@ pub mod sdl_init {
 
     pub const SDL_INIT_AUDIO: c_uint = 0x0000_0010;
     pub const SDL_INIT_VIDEO: c_uint = 0x0000_0020;
-    pub const SDL_INIT_EVENTS: c_uint = 0x000_04000;
+    pub const SDL_INIT_EVENTS: c_uint = 0x0000_4000;
 
     pub const SDL_PROP_APP_METADATA_NAME_STRING: *const c_char =
         c"SDL.app.metadata.name".as_ptr();
