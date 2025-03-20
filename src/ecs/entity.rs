@@ -4,14 +4,28 @@
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Entity(usize);
 
-impl From<usize> for Entity {
-    fn from(value: usize) -> Self {
-        Self(value)
+impl Entity {
+    /// Constructs a new `Entity` from the given ID.
+    #[must_use]
+    pub const fn new(id: usize) -> Self {
+        Self(id)
+    }
+
+    /// Returns the ID of the `Entity`.
+    #[must_use]
+    pub const fn id(&self) -> usize {
+        self.0
     }
 }
 
-impl From<Entity> for usize {
-    fn from(value: Entity) -> Self {
-        value.0
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        const ID: usize = 5;
+        const ENTITY: Entity = Entity::new(ID);
+        assert_eq!(ENTITY.id(), ID);
     }
 }

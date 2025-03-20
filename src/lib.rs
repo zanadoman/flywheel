@@ -17,7 +17,8 @@ pub use self::{
     },
 };
 
-/// 'Flywheel' [ecs] module.
+/// `Flywheel` [ecs] module.
+#[forbid(unsafe_code)]
 pub mod ecs;
 
 /// `Flywheel` [engine] module.
