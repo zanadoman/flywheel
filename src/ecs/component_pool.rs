@@ -1,11 +1,18 @@
 use super::Entity;
 
+/// Represents an object that has Sparse Set functionality.
 pub trait SparseSet {
+    /// Returns a slice of all entities that have a component in the set.
     fn owners(&self) -> &[Entity];
 
+    /// Removes the component associated with the given `Entity`.
     fn remove(&mut self, owner: Entity);
 }
 
+/// A Sparse Set-based storage for ECS components.
+///
+/// `ComponentPool` is a high-performance, fixed-size Sparse Set that allows
+/// O(1) operations for adding, retrieving, and removing components.
 pub struct ComponentPool<T, const N: usize> {
     sparse: [Option<usize>; N],
     owners: Vec<Entity>,
@@ -13,7 +20,9 @@ pub struct ComponentPool<T, const N: usize> {
 }
 
 impl<T, const N: usize> ComponentPool<T, N> {
+    /// Constructs a new `ComponentPool`.
     #[must_use]
+    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
             sparse: [None; N],
@@ -22,7 +31,11 @@ impl<T, const N: usize> ComponentPool<T, N> {
         }
     }
 
-    pub fn push(&mut self, owner: Entity, component: T) -> Result<(), T> {
+    /// Adds a component for the specified `Entity`.
+    ///
+    /// # Errors
+    /// Returns the component if the `Entity` already has a component of type `T`.
+    pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
         if self.sparse.get(owner.id()) == Some(&None) {
             self.sparse[owner.id()] = Some(self.dense.len());
             self.owners.push(owner);
@@ -33,22 +46,26 @@ impl<T, const N: usize> ComponentPool<T, N> {
         }
     }
 
+    /// Returns a reference to the component associated with the given `Entity`.
     #[must_use]
     pub fn get(&self, owner: Entity) -> Option<&T> {
         Some(&self.dense[(*self.sparse.get(owner.id())?)?])
     }
 
+    /// Returns a mutable reference to the component associated with the given `Entity`.
     #[must_use]
     pub fn get_mut(&mut self, owner: Entity) -> Option<&mut T> {
         Some(&mut self.dense[(*self.sparse.get(owner.id())?)?])
     }
 
+    /// Returns a slice of all components in the set.
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn all(&self) -> &[T] {
         &self.dense
     }
 
+    /// Returns a mutable slice of all components in the set.
     #[must_use]
     #[allow(clippy::missing_const_for_fn)]
     pub fn all_mut(&mut self) -> &mut [T] {
@@ -86,16 +103,16 @@ mod tests {
 
     fn setup() -> ComponentPool<usize, 2> {
         let mut component_pool = ComponentPool::new();
-        component_pool.push(ENTITY0, ENTITY0.id()).unwrap();
-        component_pool.push(ENTITY1, ENTITY1.id()).unwrap();
+        component_pool.add(ENTITY0, ENTITY0.id()).unwrap();
+        component_pool.add(ENTITY1, ENTITY1.id()).unwrap();
         component_pool
     }
 
     #[test]
     #[should_panic]
-    fn push() {
+    fn add() {
         let mut component_pool = setup();
-        component_pool.push(ENTITY2, ENTITY2.id()).unwrap();
+        component_pool.add(ENTITY2, ENTITY2.id()).unwrap();
     }
 
     #[test]
