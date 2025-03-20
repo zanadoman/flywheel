@@ -31,10 +31,11 @@ impl<T, const N: usize> ComponentPool<T, N> {
         }
     }
 
-    /// Adds a component for the specified `Entity`.
+    /// Adds a component for the given `Entity`.
     ///
     /// # Errors
-    /// Returns the component if the `Entity` already has a component of type `T`.
+    ///
+    /// Returns the component if the given `Entity` already has a component in the set.
     pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
         if self.sparse.get(owner.id()) == Some(&None) {
             self.sparse[owner.id()] = Some(self.dense.len());
