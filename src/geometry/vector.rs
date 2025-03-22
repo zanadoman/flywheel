@@ -172,58 +172,64 @@ mod tests {
         const Y: f32 = 3.0;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(X, Y, Z);
-        assert_eq!(VECTOR.x, X);
-        assert_eq!(VECTOR.y, Y);
-        assert_eq!(VECTOR.z, Z);
+        approx::assert_relative_eq!(VECTOR.x, X);
+        approx::assert_relative_eq!(VECTOR.y, Y);
+        approx::assert_relative_eq!(VECTOR.z, Z);
     }
 
     #[test]
     fn from_angle() {
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const Z: f32 = 6.0;
         const MAGNITUDE3: f32 = 7.0;
         let angle = geometry::into_rads(45.0);
         let vector = Vector::from_angle(angle, MAGNITUDE2, Z);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(135.0);
         let vector = Vector::from_angle(angle, MAGNITUDE2, Z);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(-135.0);
         let vector = Vector::from_angle(angle, MAGNITUDE2, Z);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(-45.0);
         let vector = Vector::from_angle(angle, MAGNITUDE2, Z);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
     }
 
     #[test]
     fn magnitude2() {
-        assert_eq!(Vector::new(2.0, 3.0, 6.0).magnitude2(), 3.6055512);
+        approx::assert_relative_eq!(
+            Vector::new(2.0, 3.0, 6.0).magnitude2(),
+            3.605_551_2
+        );
     }
 
     #[test]
     fn magnitude3() {
-        assert_eq!(Vector::new(2.0, 3.0, 6.0).magnitude3(), 7.0);
+        approx::assert_relative_eq!(
+            Vector::new(2.0, 3.0, 6.0).magnitude3(),
+            7.0
+        );
     }
 
     #[test]
     fn normalize2() {
         let vector = Vector::new(0.0, 0.0, 6.0);
-        assert_eq!(vector.normalize2().magnitude3(), 0.0);
+        approx::assert_relative_eq!(vector.normalize2().magnitude3(), 0.0);
         approx::assert_relative_eq!(
             vector.normalize2().angle(),
             vector.angle()
         );
         let vector = Vector::new(2.0, 3.0, 6.0);
-        assert_eq!(vector.normalize2().magnitude3(), 1.0);
+        approx::assert_relative_eq!(vector.normalize2().magnitude3(), 1.0);
         approx::assert_relative_eq!(
             vector.normalize2().angle(),
             vector.angle()
@@ -233,13 +239,13 @@ mod tests {
     #[test]
     fn normalize3() {
         let vector = Vector::new(0.0, 0.0, 0.0);
-        assert_eq!(vector.normalize3().magnitude3(), 0.0);
+        approx::assert_relative_eq!(vector.normalize3().magnitude3(), 0.0);
         approx::assert_relative_eq!(
             vector.normalize3().angle(),
             vector.angle()
         );
         let vector = Vector::new(2.0, 3.0, 6.0);
-        assert_eq!(vector.normalize3().magnitude3(), 1.0);
+        approx::assert_relative_eq!(vector.normalize3().magnitude3(), 1.0);
         approx::assert_relative_eq!(
             vector.normalize3().angle(),
             vector.angle()
@@ -248,20 +254,20 @@ mod tests {
 
     #[test]
     fn angle() {
-        assert_eq!(Vector::new(0.0, 0.0, 0.0).angle(), 0.0);
-        assert_eq!(
+        approx::assert_relative_eq!(Vector::new(0.0, 0.0, 0.0).angle(), 0.0);
+        approx::assert_relative_eq!(
             Vector::new(1.0, 1.0, 0.0).angle(),
             geometry::into_rads(45.0)
         );
-        assert_eq!(
+        approx::assert_relative_eq!(
             Vector::new(-1.0, 1.0, 0.0).angle(),
             geometry::into_rads(135.0)
         );
-        assert_eq!(
+        approx::assert_relative_eq!(
             Vector::new(-1.0, -1.0, 0.0).angle(),
             geometry::into_rads(-135.0)
         );
-        assert_eq!(
+        approx::assert_relative_eq!(
             Vector::new(1.0, -1.0, 0.0).angle(),
             geometry::into_rads(-45.0)
         );
@@ -269,29 +275,29 @@ mod tests {
 
     #[test]
     fn set_angle() {
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const MAGNITUDE3: f32 = 7.0;
         let mut vector = Vector::new(2.0, 3.0, 6.0);
         let angle = geometry::into_rads(45.0);
         vector.set_angle(angle);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(135.0);
         vector.set_angle(angle);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(-135.0);
         vector.set_angle(angle);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
         let angle = geometry::into_rads(-45.0);
         vector.set_angle(angle);
-        assert_eq!(vector.angle(), angle);
-        assert_eq!(vector.magnitude2(), MAGNITUDE2);
-        assert_eq!(vector.magnitude3(), MAGNITUDE3);
+        approx::assert_relative_eq!(vector.angle(), angle);
+        approx::assert_relative_eq!(vector.magnitude2(), MAGNITUDE2);
+        approx::assert_relative_eq!(vector.magnitude3(), MAGNITUDE3);
     }
 
     #[test]
@@ -351,7 +357,7 @@ mod tests {
     fn div() {
         assert_eq!(
             Vector::new(2.0, 3.0, 6.0) / 7.0,
-            Vector::new(0.2857143, 0.42857143, 0.85714287)
+            Vector::new(0.285_714_3, 0.428_571_43, 0.857_142_87)
         );
     }
 
@@ -359,6 +365,9 @@ mod tests {
     fn div_assign() {
         let mut vector = Vector::new(2.0, 3.0, 6.0);
         vector /= 7.0;
-        assert_eq!(vector, Vector::new(0.2857143, 0.42857143, 0.85714287));
+        assert_eq!(
+            vector,
+            Vector::new(0.285_714_3, 0.428_571_43, 0.857_142_87)
+        );
     }
 }

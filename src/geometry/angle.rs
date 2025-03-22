@@ -19,20 +19,20 @@ mod tests {
     #[test]
     fn into_rads() {
         const RADS: f32 = super::into_rads(0.0);
-        assert_eq!(RADS, 0.0);
-        assert_eq!(super::into_rads(45.0), PI / 4.0);
-        assert_eq!(super::into_rads(90.0), PI / 2.0);
-        assert_eq!(super::into_rads(180.0), PI);
-        assert_eq!(super::into_rads(360.0), PI * 2.0);
+        approx::assert_relative_eq!(RADS, 0.0);
+        approx::assert_relative_eq!(super::into_rads(45.0), PI / 4.0);
+        approx::assert_relative_eq!(super::into_rads(90.0), PI / 2.0);
+        approx::assert_relative_eq!(super::into_rads(180.0), PI);
+        approx::assert_relative_eq!(super::into_rads(360.0), PI * 2.0);
     }
 
     #[test]
     fn into_degs() {
         const DEGS: f32 = super::into_degs(0.0);
-        assert_eq!(DEGS, 0.0);
-        assert_eq!(super::into_degs(PI / 4.0), 45.0);
-        assert_eq!(super::into_degs(PI / 2.0), 90.0);
-        assert_eq!(super::into_degs(PI), 180.0);
-        assert_eq!(super::into_degs(PI * 2.0), 360.0);
+        approx::assert_relative_eq!(DEGS, 0.0);
+        approx::assert_relative_eq!(super::into_degs(PI / 4.0), 45.0);
+        approx::assert_relative_eq!(super::into_degs(PI / 2.0), 90.0);
+        approx::assert_relative_eq!(super::into_degs(PI), 180.0);
+        approx::assert_relative_eq!(super::into_degs(PI * 2.0), 360.0);
     }
 }

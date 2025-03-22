@@ -110,10 +110,12 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn add() {
         let mut component_pool = setup();
-        component_pool.add(ENTITY2, ENTITY2.id()).unwrap();
+        assert_eq!(
+            component_pool.add(ENTITY2, ENTITY2.id()),
+            Err(ENTITY2.id())
+        );
     }
 
     #[test]

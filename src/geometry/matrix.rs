@@ -96,42 +96,42 @@ mod tests {
         const ANGLE: f32 = geometry::into_rads(45.0);
         const SCALE: f32 = 7.0;
         let matrix = Matrix::new(ANGLE, SCALE);
-        assert_eq!(matrix.angle(), ANGLE);
-        assert_eq!(matrix.scale(), SCALE);
+        approx::assert_relative_eq!(matrix.angle(), ANGLE);
+        approx::assert_relative_eq!(matrix.scale(), SCALE);
     }
 
     #[test]
     fn identity() {
         const MATRIX: Matrix = Matrix::identity();
         const VECTOR: Vector = Vector::new(2.0, 3.0, 6.0);
-        assert_eq!(MATRIX.angle(), 0.0);
-        assert_eq!(MATRIX.scale(), 1.0);
+        approx::assert_relative_eq!(MATRIX.angle(), 0.0);
+        approx::assert_relative_eq!(MATRIX.scale(), 1.0);
         assert_eq!(MATRIX * VECTOR, VECTOR);
     }
 
     #[test]
     fn transform_x() {
         const SCALE: f32 = 7.0;
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(MAGNITUDE2, 0.0, Z);
         let angle = geometry::into_rads(45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(-135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
         let angle = geometry::into_rads(-45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_x(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).x
         );
@@ -140,26 +140,26 @@ mod tests {
     #[test]
     fn transform_y() {
         const SCALE: f32 = 7.0;
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(MAGNITUDE2, 0.0, Z);
         let angle = geometry::into_rads(45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(-135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
         let angle = geometry::into_rads(-45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_y(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).y
         );
@@ -168,26 +168,26 @@ mod tests {
     #[test]
     fn transform_z() {
         const SCALE: f32 = 7.0;
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(MAGNITUDE2, 0.0, Z);
         let angle = geometry::into_rads(45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(-135.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
         let angle = geometry::into_rads(-45.0);
-        assert_eq!(
+        approx::assert_relative_eq!(
             Matrix::new(angle, SCALE).transform_z(&VECTOR),
             (Vector::from_angle(angle, MAGNITUDE2, Z) * SCALE).z
         );
@@ -198,8 +198,8 @@ mod tests {
         const ANGLE: f32 = 45.0;
         let mut matrix = Matrix::identity();
         matrix.set_angle(ANGLE);
-        assert_eq!(matrix.angle(), ANGLE);
-        assert_eq!(matrix.scale(), 1.0);
+        approx::assert_relative_eq!(matrix.angle(), ANGLE);
+        approx::assert_relative_eq!(matrix.scale(), 1.0);
     }
 
     #[test]
@@ -207,14 +207,14 @@ mod tests {
         const SCALE: f32 = 7.0;
         let mut matrix = Matrix::identity();
         matrix.set_scale(SCALE);
-        assert_eq!(matrix.scale(), SCALE);
-        assert_eq!(matrix.angle(), 0.0);
+        approx::assert_relative_eq!(matrix.scale(), SCALE);
+        approx::assert_relative_eq!(matrix.angle(), 0.0);
     }
 
     #[test]
     fn mul() {
         const SCALE: f32 = 7.0;
-        const MAGNITUDE2: f32 = 3.6055512;
+        const MAGNITUDE2: f32 = 3.605_551_2;
         const Z: f32 = 6.0;
         const VECTOR: Vector = Vector::new(MAGNITUDE2, 0.0, Z);
         let angle = geometry::into_rads(45.0);
