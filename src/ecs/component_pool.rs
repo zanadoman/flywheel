@@ -1,7 +1,9 @@
+use core::any::Any;
+
 use super::Entity;
 
 /// Represents an object that has Sparse Set functionality.
-pub trait SparseSet {
+pub trait SparseSet: Any {
     /// Returns a slice of all entities that have a component in the set.
     fn owners(&self) -> &[Entity];
 
@@ -74,7 +76,7 @@ impl<T, const N: usize> ComponentPool<T, N> {
     }
 }
 
-impl<T, const N: usize> SparseSet for ComponentPool<T, N> {
+impl<T: 'static, const N: usize> SparseSet for ComponentPool<T, N> {
     fn owners(&self) -> &[Entity] {
         &self.owners
     }
