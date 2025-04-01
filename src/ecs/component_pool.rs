@@ -24,7 +24,6 @@ pub struct ComponentPool<T, const N: usize> {
 impl<T, const N: usize> ComponentPool<T, N> {
     /// Constructs a new `ComponentPool`.
     #[must_use]
-    #[allow(clippy::new_without_default)]
     pub const fn new() -> Self {
         Self {
             sparse: [None; N],
@@ -63,16 +62,20 @@ impl<T, const N: usize> ComponentPool<T, N> {
 
     /// Returns a slice of all components in the set.
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn all(&self) -> &[T] {
         &self.dense
     }
 
     /// Returns a mutable slice of all components in the set.
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
     pub fn all_mut(&mut self) -> &mut [T] {
         &mut self.dense
+    }
+}
+
+impl<T, const N: usize> Default for ComponentPool<T, N> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
