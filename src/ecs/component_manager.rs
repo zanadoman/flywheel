@@ -1,10 +1,11 @@
 use core::any::{Any, TypeId};
+use std::collections::HashMap;
 
 use super::{ComponentPool, Entity, SparseSet};
 
 /// A builder for constructing a `ComponentManager` with specified components.
 pub struct ComponentManagerBuilder<const N: usize> {
-    ids: Vec<TypeId>,
+    ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
@@ -12,17 +13,18 @@ impl<const N: usize> ComponentManagerBuilder<N> {
     /// Registers a component of type `T` into the `ComponentManager`.
     #[must_use]
     pub fn register<T: 'static>(mut self) -> Self {
-        if let Err(id) = self.ids.binary_search(&TypeId::of::<T>()) {
-            self.ids.insert(id, TypeId::of::<T>());
-            self.pools
-                .insert(id, Box::new(ComponentPool::<T, N>::new()));
-        }
+        self.ids.entry(TypeId::of::<T>()).or_insert_with(|| {
+            let id = self.pools.len();
+            self.pools.push(Box::new(ComponentPool::<T, N>::new()));
+            id
+        });
         self
     }
 
     /// Constructs a new `ComponentManager` by consuming `Self`.
     #[must_use]
-    pub fn build(self) -> ComponentManager<N> {
+    pub fn build(mut self) -> ComponentManager<N> {
+        self.pools.shrink_to_fit();
         ComponentManager {
             ids: self.ids,
             pools: self.pools,
@@ -35,19 +37,18 @@ impl<const N: usize> ComponentManagerBuilder<N> {
 ///
 /// Each component type is stored in its own `ComponentPool`, enabling O(1)
 /// operations for adding, retrieving, and removing components. The efficiency
-/// of accessing a `ComponentPool` of type `T` is O(log N), where N is the
-/// number of registered component types.
+/// of accessing a `ComponentPool` of type `T` is also O(1).
 pub struct ComponentManager<const N: usize> {
-    ids: Vec<TypeId>,
+    ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
 impl<const N: usize> ComponentManager<N> {
     /// Constructs a new `ComponentManagerBuilder`.
     #[must_use]
-    pub const fn builder() -> ComponentManagerBuilder<N> {
+    pub fn builder() -> ComponentManagerBuilder<N> {
         ComponentManagerBuilder {
-            ids: Vec::new(),
+            ids: HashMap::new(),
             pools: Vec::new(),
         }
     }
@@ -55,7 +56,7 @@ impl<const N: usize> ComponentManager<N> {
     /// Returns the ID of the component of type `T`.
     #[must_use]
     pub fn id<T: 'static>(&self) -> Option<usize> {
-        self.ids.binary_search(&TypeId::of::<T>()).ok()
+        self.ids.get(&TypeId::of::<T>()).copied()
     }
 
     /// Returns a reference to the `ComponentPool` of type `T`.
@@ -193,9 +194,9 @@ mod tests {
     #[test]
     fn id() {
         let component_manager = setup();
-        assert!(component_manager.id::<Health>().is_some());
-        assert!(component_manager.id::<Damage>().is_some());
-        assert!(component_manager.id::<Arrows>().is_some());
+        assert_eq!(component_manager.id::<Health>().unwrap(), 0);
+        assert_eq!(component_manager.id::<Damage>().unwrap(), 1);
+        assert_eq!(component_manager.id::<Arrows>().unwrap(), 2);
         assert!(component_manager.id::<Points>().is_none());
     }
 
