@@ -3,5 +3,6 @@ pub use self::{
     entity::Entity,
 };
 
+mod component_manager;
 mod component_pool;
 mod entity;

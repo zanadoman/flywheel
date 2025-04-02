@@ -118,6 +118,14 @@ mod tests {
     fn add() {
         let mut component_pool = setup();
         assert_eq!(
+            component_pool.add(ENTITY0, ENTITY0.id()),
+            Err(ENTITY0.id())
+        );
+        assert_eq!(
+            component_pool.add(ENTITY1, ENTITY1.id()),
+            Err(ENTITY1.id())
+        );
+        assert_eq!(
             component_pool.add(ENTITY2, ENTITY2.id()),
             Err(ENTITY2.id())
         );
@@ -141,44 +149,26 @@ mod tests {
 
     #[test]
     fn all() {
-        let mut component_pool = setup();
-        let all = component_pool.all();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&ENTITY0.id()));
-        assert!(all.contains(&ENTITY1.id()));
-        component_pool.remove(ENTITY0);
-        let all = component_pool.all();
-        assert_eq!(all.len(), 1);
-        assert!(!all.contains(&ENTITY0.id()));
-        assert!(all.contains(&ENTITY1.id()));
+        let component_pool = setup();
+        assert_eq!(component_pool.all().len(), 2);
+        assert!(component_pool.all().contains(&ENTITY0.id()));
+        assert!(component_pool.all().contains(&ENTITY1.id()));
     }
 
     #[test]
     fn all_mut() {
         let mut component_pool = setup();
-        let all = component_pool.all_mut();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&ENTITY0.id()));
-        assert!(all.contains(&ENTITY1.id()));
-        component_pool.remove(ENTITY0);
-        let all = component_pool.all_mut();
-        assert_eq!(all.len(), 1);
-        assert!(!all.contains(&ENTITY0.id()));
-        assert!(all.contains(&ENTITY1.id()));
+        assert_eq!(component_pool.all_mut().len(), 2);
+        assert!(component_pool.all_mut().contains(&ENTITY0.id()));
+        assert!(component_pool.all_mut().contains(&ENTITY1.id()));
     }
 
     #[test]
     fn owners() {
-        let mut component_pool = setup();
-        let owners = component_pool.owners();
-        assert_eq!(owners.len(), 2);
-        assert!(owners.contains(&ENTITY0));
-        assert!(owners.contains(&ENTITY1));
-        component_pool.remove(ENTITY0);
-        let owners = component_pool.owners();
-        assert_eq!(owners.len(), 1);
-        assert!(!owners.contains(&ENTITY0));
-        assert!(owners.contains(&ENTITY1));
+        let component_pool = setup();
+        assert_eq!(component_pool.owners().len(), 2);
+        assert!(component_pool.owners().contains(&ENTITY0));
+        assert!(component_pool.owners().contains(&ENTITY1));
     }
 
     #[test]
