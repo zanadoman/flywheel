@@ -10,7 +10,10 @@
 //! rendering and input handling.
 
 pub use self::{
-    ecs::{ComponentManager, ComponentPool, Entity, SparseSet},
+    ecs::{
+        ComponentManager, ComponentManagerBuilder, ComponentPool, Entity,
+        SparseSet,
+    },
     engine::{Context, ContextData},
     geometry::{
         Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,
