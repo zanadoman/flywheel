@@ -36,7 +36,8 @@ impl<T, const N: usize> ComponentPool<T, N> {
     ///
     /// # Errors
     ///
-    /// Returns the component if the given `Entity` already has a component in the set.
+    /// Returns the component if the given `Entity` already has a component in
+    /// the set.
     pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
         if self.sparse.get(owner.id()) == Some(&None) {
             self.sparse[owner.id()] = Some(self.dense.len());
@@ -54,7 +55,8 @@ impl<T, const N: usize> ComponentPool<T, N> {
         Some(&self.dense[(*self.sparse.get(owner.id())?)?])
     }
 
-    /// Returns a mutable reference to the component associated with the given `Entity`.
+    /// Returns a mutable reference to the component associated with the given
+    /// `Entity`.
     #[must_use]
     pub fn get_mut(&mut self, owner: Entity) -> Option<&mut T> {
         Some(&mut self.dense[(*self.sparse.get(owner.id())?)?])

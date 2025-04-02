@@ -24,7 +24,8 @@ impl Vector {
         Self { x, y, z }
     }
 
-    /// Constructs a new `Vector` from the given angle, 2D magnitude, Z component.
+    /// Constructs a new `Vector` from the given angle, 2D magnitude, Z
+    /// component.
     #[must_use]
     pub fn from_angle(angle: f32, magnitude2: f32, z: f32) -> Self {
         Self::new(angle.cos() * magnitude2, angle.sin() * magnitude2, z)

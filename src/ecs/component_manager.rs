@@ -1,15 +1,15 @@
-#![allow(dead_code)]
-
 use core::any::{Any, TypeId};
 
 use super::{ComponentPool, Entity, SparseSet};
 
+/// A builder for constructing a `ComponentManager` with specified components.
 pub struct ComponentManagerBuilder<const N: usize> {
     ids: Vec<TypeId>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
 impl<const N: usize> ComponentManagerBuilder<N> {
+    /// Registers a component of type `T` into the `ComponentManager`.
     #[must_use]
     pub fn register<T: 'static>(mut self) -> Self {
         if let Err(id) = self.ids.binary_search(&TypeId::of::<T>()) {
@@ -20,6 +20,7 @@ impl<const N: usize> ComponentManagerBuilder<N> {
         self
     }
 
+    /// Constructs a new `ComponentManager` by consuming `Self`.
     #[must_use]
     pub fn build(self) -> ComponentManager<N> {
         ComponentManager {
@@ -29,12 +30,20 @@ impl<const N: usize> ComponentManagerBuilder<N> {
     }
 }
 
+/// Manages the storage and retrieval of components of different types for
+/// entities in an ECS system.
+///
+/// Each component type is stored in its own `ComponentPool`, enabling O(1)
+/// operations for adding, retrieving, and removing components. The efficiency
+/// of accessing a `ComponentPool` of type `T` is O(log N), where N is the
+/// number of registered component types.
 pub struct ComponentManager<const N: usize> {
     ids: Vec<TypeId>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
 impl<const N: usize> ComponentManager<N> {
+    /// Constructs a new `ComponentManagerBuilder`.
     #[must_use]
     pub const fn builder() -> ComponentManagerBuilder<N> {
         ComponentManagerBuilder {
@@ -43,11 +52,18 @@ impl<const N: usize> ComponentManager<N> {
         }
     }
 
+    /// Returns the ID of the component of type `T`.
     #[must_use]
     pub fn id<T: 'static>(&self) -> Option<usize> {
         self.ids.binary_search(&TypeId::of::<T>()).ok()
     }
 
+    /// Adds a component of type `T` for the given `Entity`.
+    ///
+    /// # Errors
+    ///
+    /// Returns the component of type `T` if the given `Entity` already has a
+    /// component of type `T` in the set.
     pub fn add<T: 'static>(
         &mut self,
         entity: Entity,
@@ -60,37 +76,47 @@ impl<const N: usize> ComponentManager<N> {
         }
     }
 
+    /// Returns a reference to the component of type `T` associated with the
+    /// given `Entity`.
     #[must_use]
     pub fn get<T: 'static>(&self, entity: Entity) -> Option<&T> {
         self.pool()?.get(entity)
     }
 
+    /// Returns a mutable reference to the component of type `T` associated with
+    /// the given `Entity`.
     #[must_use]
     pub fn get_mut<T: 'static>(&mut self, entity: Entity) -> Option<&mut T> {
         self.pool_mut()?.get_mut(entity)
     }
 
+    /// Returns a slice of all components of type `T` in the set.
     #[must_use]
     pub fn all<T: 'static>(&self) -> Option<&[T]> {
         Some(self.pool()?.all())
     }
 
+    /// Returns a mutable slice of all components of type `T` in the set.
     #[must_use]
     pub fn all_mut<T: 'static>(&mut self) -> Option<&mut [T]> {
         Some(self.pool_mut()?.all_mut())
     }
 
+    /// Returns a slice of all entities that have a component of type `T` in the
+    /// set.
     #[must_use]
     pub fn owners<T: 'static>(&self) -> Option<&[Entity]> {
         Some(self.pool::<T>()?.owners())
     }
 
+    /// Removes the component of type `T` associated with the given `Entity`.
     pub fn remove<T: 'static>(&mut self, entity: Entity) {
         if let Some(pool) = self.pool_mut::<T>() {
             pool.remove(entity);
         }
     }
 
+    /// Removes every component associated with the given `Entity`.
     pub fn remove_all(&mut self, entity: Entity) {
         for pool in &mut self.pools {
             pool.remove(entity);

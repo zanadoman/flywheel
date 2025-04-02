@@ -1,4 +1,5 @@
 pub use self::{
+    component_manager::{ComponentManager, ComponentManagerBuilder},
     component_pool::{ComponentPool, SparseSet},
     entity::Entity,
 };
