@@ -59,19 +59,6 @@ impl<const N: usize> ComponentManager<N> {
         self.ids.get(&TypeId::of::<T>()).copied()
     }
 
-    /// Returns a reference to the `ComponentPool` of type `T`.
-    #[must_use]
-    pub fn pool<T: 'static>(&self) -> Option<&ComponentPool<T, N>> {
-        (self.pools[self.id::<T>()?].as_ref() as &dyn Any).downcast_ref()
-    }
-
-    /// Returns a mutable reference to the `ComponentPool` of type `T`.
-    #[must_use]
-    pub fn pool_mut<T: 'static>(&mut self) -> Option<&mut ComponentPool<T, N>> {
-        let id = self.id::<T>()?;
-        (self.pools[id].as_mut() as &mut dyn Any).downcast_mut()
-    }
-
     /// Adds a component of type `T` for the given `Entity`.
     ///
     /// # Errors
@@ -136,6 +123,17 @@ impl<const N: usize> ComponentManager<N> {
             pool.remove(entity);
         }
     }
+
+    #[must_use]
+    fn pool<T: 'static>(&self) -> Option<&ComponentPool<T, N>> {
+        (self.pools[self.id::<T>()?].as_ref() as &dyn Any).downcast_ref()
+    }
+
+    #[must_use]
+    fn pool_mut<T: 'static>(&mut self) -> Option<&mut ComponentPool<T, N>> {
+        let id = self.id::<T>()?;
+        (self.pools[id].as_mut() as &mut dyn Any).downcast_mut()
+    }
 }
 
 #[cfg(test)]
@@ -198,24 +196,6 @@ mod tests {
         assert_eq!(component_manager.id::<Damage>().unwrap(), 1);
         assert_eq!(component_manager.id::<Arrows>().unwrap(), 2);
         assert!(component_manager.id::<Points>().is_none());
-    }
-
-    #[test]
-    fn pool() {
-        let component_manager = setup();
-        assert!(component_manager.pool::<Health>().is_some());
-        assert!(component_manager.pool::<Damage>().is_some());
-        assert!(component_manager.pool::<Arrows>().is_some());
-        assert!(component_manager.pool::<Points>().is_none());
-    }
-
-    #[test]
-    fn pool_mut() {
-        let mut component_manager = setup();
-        assert!(component_manager.pool_mut::<Health>().is_some());
-        assert!(component_manager.pool_mut::<Damage>().is_some());
-        assert!(component_manager.pool_mut::<Arrows>().is_some());
-        assert!(component_manager.pool_mut::<Points>().is_none());
     }
 
     #[test]
