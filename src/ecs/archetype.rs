@@ -2,7 +2,7 @@ type Byte = usize;
 
 /// ECS `Archetype` representing the set of component IDs associated with an
 /// `Entity`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Archetype {
     count: usize,
@@ -40,29 +40,23 @@ impl Archetype {
     /// Returns whether the `Archetype` is the subset of another `Archetype`.
     #[must_use]
     pub fn is_subset_of(&self, other: &Self) -> bool {
-        if other.count < self.count {
-            return false;
-        }
-        for i in 0..self.bytes.len() {
-            if self.bytes[i] & other.bytes[i] != self.bytes[i] {
-                return false;
-            }
-        }
-        true
+        self.count <= other.count
+            && self
+                .bytes
+                .iter()
+                .zip(&other.bytes)
+                .all(|(s, o)| s & o == *s)
     }
 
     /// Returns whether the `Archetype` is the superset of another `Archetype`.
     #[must_use]
     pub fn is_superset_of(&self, other: &Self) -> bool {
-        if self.count < other.count {
-            return false;
-        }
-        for i in 0..other.bytes.len() {
-            if other.bytes[i] & self.bytes[i] != other.bytes[i] {
-                return false;
-            }
-        }
-        true
+        other.count <= self.count
+            && other
+                .bytes
+                .iter()
+                .zip(&self.bytes)
+                .all(|(o, s)| o & s == *o)
     }
 
     /// Removes a component ID from the `Archetype`.
@@ -75,6 +69,15 @@ impl Archetype {
     /// Removes every component ID from the `Archetype`.
     pub fn reset(&mut self) {
         self.bytes.fill(0);
+    }
+}
+
+impl PartialEq for Archetype {
+    fn eq(&self, other: &Self) -> bool {
+        let len = self.bytes.len().min(other.bytes.len());
+        self.bytes.iter().take(len).eq(other.bytes.iter().take(len))
+            && self.bytes.iter().skip(len).all(|b| *b == 0)
+            && other.bytes.iter().skip(len).all(|b| *b == 0)
     }
 }
 
@@ -155,15 +158,6 @@ mod tests {
         assert!(archetype2.is_superset_of(&archetype1));
         let mut archetype1 = Archetype::new();
         archetype1.add(0);
-        archetype1.add(2);
-        let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(1);
-        archetype2.add(2);
-        assert!(!archetype1.is_superset_of(&archetype2));
-        assert!(archetype2.is_superset_of(&archetype1));
-        let mut archetype1 = Archetype::new();
-        archetype1.add(0);
         archetype1.add(1);
         archetype1.add(2);
         let mut archetype2 = Archetype::new();
@@ -171,6 +165,15 @@ mod tests {
         archetype2.add(2);
         assert!(archetype1.is_superset_of(&archetype2));
         assert!(!archetype2.is_superset_of(&archetype1));
+        let mut archetype1 = Archetype::new();
+        archetype1.add(0);
+        archetype1.add(2);
+        let mut archetype2 = Archetype::new();
+        archetype2.add(0);
+        archetype2.add(1);
+        archetype2.add(2);
+        assert!(!archetype1.is_superset_of(&archetype2));
+        assert!(archetype2.is_superset_of(&archetype1));
     }
 
     #[test]
@@ -185,5 +188,31 @@ mod tests {
         for i in 0..N {
             assert!(!archetype.has(i));
         }
+    }
+
+    #[test]
+    fn eq() {
+        let mut archetype1 = Archetype::new();
+        archetype1.add(0);
+        archetype1.add(1);
+        archetype1.add(2);
+        let mut archetype2 = Archetype::new();
+        archetype2.add(0);
+        archetype2.add(2);
+        assert!(archetype1 != archetype2);
+        assert!(archetype2 != archetype1);
+        archetype2.add(1);
+        assert!(archetype1 == archetype2);
+        assert!(archetype2 == archetype1);
+        let mut archetype1 = Archetype::new();
+        archetype1.add(0);
+        let mut archetype2 = Archetype::new();
+        archetype2.add(0);
+        archetype2.add(Archetype::BITS);
+        assert!(archetype1 != archetype2);
+        assert!(archetype2 != archetype1);
+        archetype2.remove(Archetype::BITS);
+        assert!(archetype1 == archetype2);
+        assert!(archetype2 == archetype1);
     }
 }
