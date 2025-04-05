@@ -1,7 +1,10 @@
 use core::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use super::{ComponentPool, Entity, SparseSet};
+use super::{
+    Entity,
+    component_pool::{ComponentPool, SparseSet},
+};
 
 /// A builder for constructing a `ComponentManager` with specified components.
 pub struct ComponentManagerBuilder<const N: usize> {

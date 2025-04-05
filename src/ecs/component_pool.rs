@@ -2,19 +2,12 @@ use core::any::Any;
 
 use super::Entity;
 
-/// Represents an object that has Sparse Set functionality.
 pub trait SparseSet: Any {
-    /// Returns a slice of all entities that have a component in the set.
     fn owners(&self) -> &[Entity];
 
-    /// Removes the component associated with the given `Entity`.
     fn remove(&mut self, owner: Entity);
 }
 
-/// A Sparse Set-based storage for ECS components.
-///
-/// `ComponentPool` is a high-performance, fixed-size Sparse Set that allows
-/// O(1) operations for adding, retrieving, and removing components.
 pub struct ComponentPool<T, const N: usize> {
     sparse: [Option<usize>; N],
     owners: Vec<Entity>,
@@ -22,7 +15,6 @@ pub struct ComponentPool<T, const N: usize> {
 }
 
 impl<T, const N: usize> ComponentPool<T, N> {
-    /// Constructs a new `ComponentPool`.
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -32,12 +24,6 @@ impl<T, const N: usize> ComponentPool<T, N> {
         }
     }
 
-    /// Adds a component for the given `Entity`.
-    ///
-    /// # Errors
-    ///
-    /// Returns the component if the given `Entity` already has a component in
-    /// the set.
     pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
         if self.sparse.get(owner.id()) == Some(&None) {
             self.sparse[owner.id()] = Some(self.dense.len());
@@ -49,26 +35,21 @@ impl<T, const N: usize> ComponentPool<T, N> {
         }
     }
 
-    /// Returns a reference to the component associated with the given `Entity`.
     #[must_use]
     pub fn get(&self, owner: Entity) -> Option<&T> {
         Some(&self.dense[(*self.sparse.get(owner.id())?)?])
     }
 
-    /// Returns a mutable reference to the component associated with the given
-    /// `Entity`.
     #[must_use]
     pub fn get_mut(&mut self, owner: Entity) -> Option<&mut T> {
         Some(&mut self.dense[(*self.sparse.get(owner.id())?)?])
     }
 
-    /// Returns a slice of all components in the set.
     #[must_use]
     pub fn all(&self) -> &[T] {
         &self.dense
     }
 
-    /// Returns a mutable slice of all components in the set.
     #[must_use]
     pub fn all_mut(&mut self) -> &mut [T] {
         &mut self.dense

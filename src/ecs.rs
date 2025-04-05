@@ -1,7 +1,6 @@
 pub use self::{
     archetype::Archetype,
     component_manager::{ComponentManager, ComponentManagerBuilder},
-    component_pool::{ComponentPool, SparseSet},
     entity::Entity,
 };
 
