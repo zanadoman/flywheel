@@ -1,7 +1,6 @@
 /// ECS `Entity`.
 #[repr(C)]
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Entity(usize);
 
 impl Entity {
