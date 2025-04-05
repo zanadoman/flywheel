@@ -11,8 +11,8 @@
 
 pub use self::{
     ecs::{
-        ComponentManager, ComponentManagerBuilder, ComponentPool, Entity,
-        SparseSet,
+        Archetype, ComponentManager, ComponentManagerBuilder, ComponentPool,
+        Entity, SparseSet,
     },
     engine::{Context, ContextData},
     geometry::{
