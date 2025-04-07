@@ -244,6 +244,7 @@ impl Context {
 
     fn set_panic_hook(title: String) {
         panic::set_hook(Box::new(move |panic_info| {
+            eprintln!("{panic_info}");
             let title = CString::new(title.clone())
                 .unwrap_or_else(|_| c"Flywheel Engine".into());
             let message = CString::new(panic_info.to_string())
@@ -264,7 +265,6 @@ impl Context {
                         .to_string_lossy()
                 );
             }
-            eprintln!("{panic_info}");
         }));
     }
 }
