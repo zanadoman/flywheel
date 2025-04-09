@@ -6,35 +6,6 @@ use super::{
     component_pool::{ComponentPool, SparseSet},
 };
 
-/// A builder for constructing a `ComponentManager` with specified components.
-pub struct ComponentManagerBuilder {
-    ids: HashMap<TypeId, usize>,
-    pools: Vec<Box<dyn SparseSet>>,
-}
-
-impl ComponentManagerBuilder {
-    /// Registers a component of type `T` into the `ComponentManager`.
-    #[must_use]
-    pub fn register<T: 'static>(mut self) -> Self {
-        self.ids.entry(TypeId::of::<T>()).or_insert_with(|| {
-            let id = self.pools.len();
-            self.pools.push(Box::new(ComponentPool::<T>::new()));
-            id
-        });
-        self
-    }
-
-    /// Constructs a new `ComponentManager` by consuming `Self`.
-    #[must_use]
-    pub fn build(mut self) -> ComponentManager {
-        self.pools.shrink_to_fit();
-        ComponentManager {
-            ids: self.ids,
-            pools: self.pools,
-        }
-    }
-}
-
 /// Manages the storage and retrieval of components of different types for
 /// entities in an ECS system.
 ///
@@ -47,10 +18,10 @@ pub struct ComponentManager {
 }
 
 impl ComponentManager {
-    /// Constructs a new `ComponentManagerBuilder`.
+    /// Constructs a new `ComponentManager`.
     #[must_use]
-    pub fn builder() -> ComponentManagerBuilder {
-        ComponentManagerBuilder {
+    pub fn new() -> Self {
+        Self {
             ids: HashMap::new(),
             pools: Vec::new(),
         }
@@ -75,6 +46,15 @@ impl ComponentManager {
     ) -> Result<(), T> {
         if let Some(pool) = self.pool_mut() {
             pool.add(entity, component)
+        } else if self
+            .ids
+            .insert(TypeId::of::<T>(), self.pools.len())
+            .is_none()
+        {
+            let mut pool = Box::new(ComponentPool::new());
+            let result = pool.add(entity, component);
+            self.pools.push(pool);
+            result
         } else {
             Err(component)
         }
@@ -96,21 +76,21 @@ impl ComponentManager {
 
     /// Returns a slice of all components of type `T` in the set.
     #[must_use]
-    pub fn all<T: 'static>(&self) -> Option<&[T]> {
-        Some(self.pool()?.all())
+    pub fn all<T: 'static>(&self) -> &[T] {
+        self.pool().map_or(&[], |p| p.all())
     }
 
     /// Returns a mutable slice of all components of type `T` in the set.
     #[must_use]
-    pub fn all_mut<T: 'static>(&mut self) -> Option<&mut [T]> {
-        Some(self.pool_mut()?.all_mut())
+    pub fn all_mut<T: 'static>(&mut self) -> &mut [T] {
+        self.pool_mut().map_or(&mut [], |p| p.all_mut())
     }
 
     /// Returns a slice of all entities that have a component of type `T` in the
     /// set.
     #[must_use]
-    pub fn owners<T: 'static>(&self) -> Option<&[Entity]> {
-        Some(self.pool::<T>()?.owners())
+    pub fn owners<T: 'static>(&self) -> &[Entity] {
+        self.pool::<T>().map_or(&[], |p| p.owners())
     }
 
     /// Removes the component of type `T` associated with the given `Entity`.
@@ -136,6 +116,12 @@ impl ComponentManager {
     fn pool_mut<T: 'static>(&mut self) -> Option<&mut ComponentPool<T>> {
         let id = self.id::<T>()?;
         (self.pools[id].as_mut() as &mut dyn Any).downcast_mut()
+    }
+}
+
+impl Default for ComponentManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -172,11 +158,7 @@ mod tests {
     const ENTITY2_POINTS: u8 = 12;
 
     fn setup() -> ComponentManager {
-        let mut component_manager = ComponentManager::builder()
-            .register::<Health>()
-            .register::<Damage>()
-            .register::<Arrows>()
-            .build();
+        let mut component_manager = ComponentManager::new();
         component_manager
             .add(ENTITY0, Health(ENTITY0_HEALTH))
             .unwrap();
@@ -197,7 +179,7 @@ mod tests {
         let component_manager = setup();
         assert_eq!(component_manager.id::<Health>().unwrap(), 0);
         assert_eq!(component_manager.id::<Damage>().unwrap(), 1);
-        assert_eq!(component_manager.id::<Arrows>().unwrap(), 2);
+        assert!(component_manager.id::<Arrows>().is_none());
         assert!(component_manager.id::<Points>().is_none());
     }
 
@@ -217,9 +199,10 @@ mod tests {
                 .add(ENTITY0, Arrows(ENTITY0_ARROWS))
                 .is_ok(),
         );
-        assert_eq!(
-            component_manager.add(ENTITY0, Points(ENTITY0_POINTS)),
-            Err(Points(ENTITY0_POINTS))
+        assert!(
+            component_manager
+                .add(ENTITY0, Points(ENTITY0_POINTS))
+                .is_ok()
         );
         assert_eq!(
             component_manager.add(ENTITY1, Health(ENTITY1_HEALTH)),
@@ -234,9 +217,10 @@ mod tests {
                 .add(ENTITY1, Arrows(ENTITY1_ARROWS))
                 .is_ok(),
         );
-        assert_eq!(
-            component_manager.add(ENTITY1, Points(ENTITY1_POINTS)),
-            Err(Points(ENTITY1_POINTS))
+        assert!(
+            component_manager
+                .add(ENTITY1, Points(ENTITY1_POINTS))
+                .is_ok()
         );
         assert!(
             component_manager
@@ -253,9 +237,10 @@ mod tests {
                 .add(ENTITY2, Arrows(ENTITY2_ARROWS))
                 .is_ok(),
         );
-        assert_eq!(
-            component_manager.add(ENTITY2, Points(ENTITY2_POINTS)),
-            Err(Points(ENTITY2_POINTS))
+        assert!(
+            component_manager
+                .add(ENTITY2, Points(ENTITY2_POINTS))
+                .is_ok()
         );
     }
 
@@ -320,46 +305,46 @@ mod tests {
     #[test]
     fn all() {
         let component_manager = setup();
-        let all = component_manager.all().unwrap();
+        let all = component_manager.all();
         assert_eq!(all.len(), 2);
         assert!(all.contains(&Health(ENTITY0_HEALTH)));
         assert!(all.contains(&Health(ENTITY1_HEALTH)));
-        let all = component_manager.all().unwrap();
+        let all = component_manager.all();
         assert_eq!(all.len(), 2);
         assert!(all.contains(&Damage(ENTITY0_DAMAGE)));
         assert!(all.contains(&Damage(ENTITY1_DAMAGE)));
-        assert!(component_manager.all::<Arrows>().unwrap().is_empty());
-        assert!(component_manager.all::<Points>().is_none());
+        assert!(component_manager.all::<Arrows>().is_empty());
+        assert!(component_manager.all::<Points>().is_empty());
     }
 
     #[test]
     fn all_mut() {
         let mut component_manager = setup();
-        let all = component_manager.all_mut().unwrap();
+        let all = component_manager.all_mut();
         assert_eq!(all.len(), 2);
         assert!(all.contains(&Health(ENTITY0_HEALTH)));
         assert!(all.contains(&Health(ENTITY1_HEALTH)));
-        let all = component_manager.all_mut().unwrap();
+        let all = component_manager.all_mut();
         assert_eq!(all.len(), 2);
         assert!(all.contains(&Damage(ENTITY0_DAMAGE)));
         assert!(all.contains(&Damage(ENTITY1_DAMAGE)));
-        assert!(component_manager.all_mut::<Arrows>().unwrap().is_empty());
-        assert!(component_manager.all_mut::<Points>().is_none());
+        assert!(component_manager.all_mut::<Arrows>().is_empty());
+        assert!(component_manager.all_mut::<Points>().is_empty());
     }
 
     #[test]
     fn owners() {
         let component_manager = setup();
-        let owners = component_manager.owners::<Health>().unwrap();
+        let owners = component_manager.owners::<Health>();
         assert_eq!(owners.len(), 2);
         assert!(owners.contains(&ENTITY0));
         assert!(owners.contains(&ENTITY1));
-        let owners = component_manager.owners::<Damage>().unwrap();
+        let owners = component_manager.owners::<Damage>();
         assert_eq!(owners.len(), 2);
         assert!(owners.contains(&ENTITY0));
         assert!(owners.contains(&ENTITY1));
-        assert!(component_manager.owners::<Arrows>().unwrap().is_empty());
-        assert!(component_manager.owners::<Points>().is_none());
+        assert!(component_manager.owners::<Arrows>().is_empty());
+        assert!(component_manager.owners::<Points>().is_empty());
     }
 
     #[test]

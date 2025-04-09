@@ -81,35 +81,34 @@ impl Context {
         if IS_CONTEXT_INITIALIZED.swap(true, Ordering::SeqCst) {
             return Err("Cannot initialize the Context twice.".to_owned());
         }
-        let name = CString::new(context_data.name).map_err(|err| {
+        let name = CString::new(context_data.name).map_err(|e| {
             IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-            err.to_string()
+            e.to_string()
         })?;
-        let version = CString::new(context_data.version).map_err(|err| {
+        let version = CString::new(context_data.version).map_err(|e| {
             IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-            err.to_string()
+            e.to_string()
         })?;
         let identifier =
-            CString::new(context_data.identifier).map_err(|err| {
+            CString::new(context_data.identifier).map_err(|e| {
                 IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-                err.to_string()
+                e.to_string()
             })?;
-        let creator = CString::new(context_data.creator).map_err(|err| {
+        let creator = CString::new(context_data.creator).map_err(|e| {
             IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-            err.to_string()
+            e.to_string()
         })?;
-        let copyright =
-            CString::new(context_data.copyright).map_err(|err| {
-                IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-                err.to_string()
-            })?;
-        let url = CString::new(context_data.url).map_err(|err| {
+        let copyright = CString::new(context_data.copyright).map_err(|e| {
             IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-            err.to_string()
+            e.to_string()
         })?;
-        let r#type = CString::new(context_data.r#type).map_err(|err| {
+        let url = CString::new(context_data.url).map_err(|e| {
             IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
-            err.to_string()
+            e.to_string()
+        })?;
+        let r#type = CString::new(context_data.r#type).map_err(|e| {
+            IS_CONTEXT_INITIALIZED.store(false, Ordering::SeqCst);
+            e.to_string()
         })?;
         if !unsafe {
             sdl_init::SDL_SetAppMetadataProperty(
@@ -243,11 +242,11 @@ impl Context {
     }
 
     fn set_panic_hook(title: String) {
-        panic::set_hook(Box::new(move |panic_info| {
-            eprintln!("{panic_info}");
+        panic::set_hook(Box::new(move |p| {
+            eprintln!("{p}");
             let title = CString::new(title.clone())
                 .unwrap_or_else(|_| c"Flywheel Engine".into());
-            let message = CString::new(panic_info.to_string())
+            let message = CString::new(p.to_string())
                 .unwrap_or_else(|_| c"panic occurred".into());
             if !cfg!(test)
                 && !unsafe {
