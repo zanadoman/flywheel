@@ -41,18 +41,18 @@ impl ComponentManager {
     /// component of type `T` in the set.
     pub fn add<T: 'static>(
         &mut self,
-        entity: Entity,
+        owner: Entity,
         component: T,
     ) -> Result<(), T> {
         if let Some(pool) = self.pool_mut() {
-            pool.add(entity, component)
+            pool.add(owner, component)
         } else if self
             .ids
             .insert(TypeId::of::<T>(), self.pools.len())
             .is_none()
         {
             let mut pool = Box::new(ComponentPool::new());
-            let result = pool.add(entity, component);
+            let result = pool.add(owner, component);
             self.pools.push(pool);
             result
         } else {
@@ -63,15 +63,15 @@ impl ComponentManager {
     /// Returns a reference to the component of type `T` associated with the
     /// given `Entity`.
     #[must_use]
-    pub fn get<T: 'static>(&self, entity: Entity) -> Option<&T> {
-        self.pool()?.get(entity)
+    pub fn get<T: 'static>(&self, owner: Entity) -> Option<&T> {
+        self.pool()?.get(owner)
     }
 
     /// Returns a mutable reference to the component of type `T` associated with
     /// the given `Entity`.
     #[must_use]
-    pub fn get_mut<T: 'static>(&mut self, entity: Entity) -> Option<&mut T> {
-        self.pool_mut()?.get_mut(entity)
+    pub fn get_mut<T: 'static>(&mut self, owner: Entity) -> Option<&mut T> {
+        self.pool_mut()?.get_mut(owner)
     }
 
     /// Returns a slice of all components of type `T` in the set.
@@ -94,16 +94,16 @@ impl ComponentManager {
     }
 
     /// Removes the component of type `T` associated with the given `Entity`.
-    pub fn remove<T: 'static>(&mut self, entity: Entity) {
+    pub fn remove<T: 'static>(&mut self, owner: Entity) {
         if let Some(pool) = self.pool_mut::<T>() {
-            pool.remove(entity);
+            pool.remove(owner);
         }
     }
 
     /// Removes every component associated with the given `Entity`.
-    pub fn remove_all(&mut self, entity: Entity) {
+    pub fn remove_all(&mut self, owner: Entity) {
         for pool in &mut self.pools {
-            pool.remove(entity);
+            pool.remove(owner);
         }
     }
 
@@ -305,14 +305,12 @@ mod tests {
     #[test]
     fn all() {
         let component_manager = setup();
-        let all = component_manager.all();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&Health(ENTITY0_HEALTH)));
-        assert!(all.contains(&Health(ENTITY1_HEALTH)));
-        let all = component_manager.all();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&Damage(ENTITY0_DAMAGE)));
-        assert!(all.contains(&Damage(ENTITY1_DAMAGE)));
+        assert_eq!(component_manager.all::<Health>().len(), 2);
+        assert!(component_manager.all().contains(&Health(ENTITY0_HEALTH)));
+        assert!(component_manager.all().contains(&Health(ENTITY1_HEALTH)));
+        assert_eq!(component_manager.all::<Damage>().len(), 2);
+        assert!(component_manager.all().contains(&Damage(ENTITY0_DAMAGE)));
+        assert!(component_manager.all().contains(&Damage(ENTITY1_DAMAGE)));
         assert!(component_manager.all::<Arrows>().is_empty());
         assert!(component_manager.all::<Points>().is_empty());
     }
@@ -320,14 +318,12 @@ mod tests {
     #[test]
     fn all_mut() {
         let mut component_manager = setup();
-        let all = component_manager.all_mut();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&Health(ENTITY0_HEALTH)));
-        assert!(all.contains(&Health(ENTITY1_HEALTH)));
-        let all = component_manager.all_mut();
-        assert_eq!(all.len(), 2);
-        assert!(all.contains(&Damage(ENTITY0_DAMAGE)));
-        assert!(all.contains(&Damage(ENTITY1_DAMAGE)));
+        assert_eq!(component_manager.all::<Health>().len(), 2);
+        assert!(component_manager.all().contains(&Health(ENTITY0_HEALTH)));
+        assert!(component_manager.all().contains(&Health(ENTITY1_HEALTH)));
+        assert_eq!(component_manager.all::<Damage>().len(), 2);
+        assert!(component_manager.all().contains(&Damage(ENTITY0_DAMAGE)));
+        assert!(component_manager.all().contains(&Damage(ENTITY1_DAMAGE)));
         assert!(component_manager.all_mut::<Arrows>().is_empty());
         assert!(component_manager.all_mut::<Points>().is_empty());
     }
@@ -335,14 +331,12 @@ mod tests {
     #[test]
     fn owners() {
         let component_manager = setup();
-        let owners = component_manager.owners::<Health>();
-        assert_eq!(owners.len(), 2);
-        assert!(owners.contains(&ENTITY0));
-        assert!(owners.contains(&ENTITY1));
-        let owners = component_manager.owners::<Damage>();
-        assert_eq!(owners.len(), 2);
-        assert!(owners.contains(&ENTITY0));
-        assert!(owners.contains(&ENTITY1));
+        assert_eq!(component_manager.owners::<Health>().len(), 2);
+        assert!(component_manager.owners::<Health>().contains(&ENTITY0));
+        assert!(component_manager.owners::<Health>().contains(&ENTITY1));
+        assert_eq!(component_manager.owners::<Damage>().len(), 2);
+        assert!(component_manager.owners::<Damage>().contains(&ENTITY0));
+        assert!(component_manager.owners::<Damage>().contains(&ENTITY1));
         assert!(component_manager.owners::<Arrows>().is_empty());
         assert!(component_manager.owners::<Points>().is_empty());
     }
