@@ -8,23 +8,26 @@ pub trait SparseSet: Any {
     fn remove(&mut self, owner: Entity);
 }
 
-pub struct ComponentPool<T, const N: usize> {
-    sparse: [Option<usize>; N],
+pub struct ComponentPool<T> {
+    sparse: Vec<Option<usize>>,
     owners: Vec<Entity>,
     dense: Vec<T>,
 }
 
-impl<T, const N: usize> ComponentPool<T, N> {
+impl<T> ComponentPool<T> {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            sparse: [None; N],
+            sparse: Vec::new(),
             owners: Vec::new(),
             dense: Vec::new(),
         }
     }
 
     pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
+        if self.sparse.len() <= owner.id() {
+            self.sparse.resize(owner.id() + 1, None);
+        }
         if self.sparse.get(owner.id()) == Some(&None) {
             self.sparse[owner.id()] = Some(self.dense.len());
             self.owners.push(owner);
@@ -56,13 +59,13 @@ impl<T, const N: usize> ComponentPool<T, N> {
     }
 }
 
-impl<T, const N: usize> Default for ComponentPool<T, N> {
+impl<T> Default for ComponentPool<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: 'static, const N: usize> SparseSet for ComponentPool<T, N> {
+impl<T: 'static> SparseSet for ComponentPool<T> {
     fn owners(&self) -> &[Entity] {
         &self.owners
     }
@@ -73,7 +76,8 @@ impl<T: 'static, const N: usize> SparseSet for ComponentPool<T, N> {
             if *index != last_index {
                 self.dense.swap(*index, last_index);
                 self.owners.swap(*index, last_index);
-                self.sparse[self.owners[*index].id()] = Some(*index);
+                let swapped = self.owners[*index].id();
+                self.sparse[swapped] = Some(*index);
             }
             self.dense.pop();
             self.owners.pop();
@@ -90,7 +94,7 @@ mod tests {
     const ENTITY1: Entity = Entity::new(1);
     const ENTITY2: Entity = Entity::new(2);
 
-    fn setup() -> ComponentPool<usize, 2> {
+    fn setup() -> ComponentPool<usize> {
         let mut component_pool = ComponentPool::new();
         component_pool.add(ENTITY0, ENTITY0.id()).unwrap();
         component_pool.add(ENTITY1, ENTITY1.id()).unwrap();
@@ -108,10 +112,7 @@ mod tests {
             component_pool.add(ENTITY1, ENTITY1.id()),
             Err(ENTITY1.id())
         );
-        assert_eq!(
-            component_pool.add(ENTITY2, ENTITY2.id()),
-            Err(ENTITY2.id())
-        );
+        assert!(component_pool.add(ENTITY2, ENTITY2.id()).is_ok());
     }
 
     #[test]

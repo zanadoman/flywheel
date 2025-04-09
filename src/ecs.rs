@@ -1,7 +1,5 @@
 pub use self::{
-    archetype::Archetype,
-    component_manager::{ComponentManager, ComponentManagerBuilder},
-    entity::Entity,
+    archetype::Archetype, component_manager::ComponentManager, entity::Entity,
 };
 
 mod archetype;

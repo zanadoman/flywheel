@@ -7,18 +7,18 @@ use super::{
 };
 
 /// A builder for constructing a `ComponentManager` with specified components.
-pub struct ComponentManagerBuilder<const N: usize> {
+pub struct ComponentManagerBuilder {
     ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
-impl<const N: usize> ComponentManagerBuilder<N> {
+impl ComponentManagerBuilder {
     /// Registers a component of type `T` into the `ComponentManager`.
     #[must_use]
     pub fn register<T: 'static>(mut self) -> Self {
         self.ids.entry(TypeId::of::<T>()).or_insert_with(|| {
             let id = self.pools.len();
-            self.pools.push(Box::new(ComponentPool::<T, N>::new()));
+            self.pools.push(Box::new(ComponentPool::<T>::new()));
             id
         });
         self
@@ -26,7 +26,7 @@ impl<const N: usize> ComponentManagerBuilder<N> {
 
     /// Constructs a new `ComponentManager` by consuming `Self`.
     #[must_use]
-    pub fn build(mut self) -> ComponentManager<N> {
+    pub fn build(mut self) -> ComponentManager {
         self.pools.shrink_to_fit();
         ComponentManager {
             ids: self.ids,
@@ -41,15 +41,15 @@ impl<const N: usize> ComponentManagerBuilder<N> {
 /// Each component type is stored in its own `ComponentPool`, enabling O(1)
 /// operations for adding, retrieving, and removing components. The efficiency
 /// of accessing a `ComponentPool` of type `T` is also O(1).
-pub struct ComponentManager<const N: usize> {
+pub struct ComponentManager {
     ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
-impl<const N: usize> ComponentManager<N> {
+impl ComponentManager {
     /// Constructs a new `ComponentManagerBuilder`.
     #[must_use]
-    pub fn builder() -> ComponentManagerBuilder<N> {
+    pub fn builder() -> ComponentManagerBuilder {
         ComponentManagerBuilder {
             ids: HashMap::new(),
             pools: Vec::new(),
@@ -128,12 +128,12 @@ impl<const N: usize> ComponentManager<N> {
     }
 
     #[must_use]
-    fn pool<T: 'static>(&self) -> Option<&ComponentPool<T, N>> {
+    fn pool<T: 'static>(&self) -> Option<&ComponentPool<T>> {
         (self.pools[self.id::<T>()?].as_ref() as &dyn Any).downcast_ref()
     }
 
     #[must_use]
-    fn pool_mut<T: 'static>(&mut self) -> Option<&mut ComponentPool<T, N>> {
+    fn pool_mut<T: 'static>(&mut self) -> Option<&mut ComponentPool<T>> {
         let id = self.id::<T>()?;
         (self.pools[id].as_mut() as &mut dyn Any).downcast_mut()
     }
@@ -171,7 +171,7 @@ mod tests {
     const ENTITY2_ARROWS: u8 = 11;
     const ENTITY2_POINTS: u8 = 12;
 
-    fn setup() -> ComponentManager<2> {
+    fn setup() -> ComponentManager {
         let mut component_manager = ComponentManager::builder()
             .register::<Health>()
             .register::<Damage>()
@@ -238,17 +238,20 @@ mod tests {
             component_manager.add(ENTITY1, Points(ENTITY1_POINTS)),
             Err(Points(ENTITY1_POINTS))
         );
-        assert_eq!(
-            component_manager.add(ENTITY2, Health(ENTITY2_HEALTH)),
-            Err(Health(ENTITY2_HEALTH))
+        assert!(
+            component_manager
+                .add(ENTITY2, Health(ENTITY2_HEALTH))
+                .is_ok(),
         );
-        assert_eq!(
-            component_manager.add(ENTITY2, Damage(ENTITY2_DAMAGE)),
-            Err(Damage(ENTITY2_DAMAGE))
+        assert!(
+            component_manager
+                .add(ENTITY2, Damage(ENTITY2_DAMAGE))
+                .is_ok()
         );
-        assert_eq!(
-            component_manager.add(ENTITY2, Arrows(ENTITY2_ARROWS)),
-            Err(Arrows(ENTITY2_ARROWS))
+        assert!(
+            component_manager
+                .add(ENTITY2, Arrows(ENTITY2_ARROWS))
+                .is_ok(),
         );
         assert_eq!(
             component_manager.add(ENTITY2, Points(ENTITY2_POINTS)),
