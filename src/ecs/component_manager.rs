@@ -33,6 +33,16 @@ impl ComponentManager {
         self.ids.get(&TypeId::of::<T>()).copied()
     }
 
+    /// Returns the ID of the component of type `T`.
+    #[must_use]
+    pub fn id_or_register<T: 'static>(&mut self) -> usize {
+        *self.ids.entry(TypeId::of::<T>()).or_insert_with(|| {
+            let id = self.pools.len();
+            self.pools.push(Box::new(ComponentPool::<T>::new()));
+            id
+        })
+    }
+
     /// Adds a component of type `T` for the given `Entity`.
     ///
     /// # Errors
@@ -181,6 +191,15 @@ mod tests {
         assert_eq!(component_manager.id::<Damage>().unwrap(), 1);
         assert!(component_manager.id::<Arrows>().is_none());
         assert!(component_manager.id::<Points>().is_none());
+    }
+
+    #[test]
+    fn id_or_register() {
+        let mut component_manager = setup();
+        assert_eq!(component_manager.id::<Health>().unwrap(), 0);
+        assert_eq!(component_manager.id::<Damage>().unwrap(), 1);
+        assert_eq!(component_manager.id_or_register::<Arrows>(), 2);
+        assert_eq!(component_manager.id_or_register::<Points>(), 3);
     }
 
     #[test]
