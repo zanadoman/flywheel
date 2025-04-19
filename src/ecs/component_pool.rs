@@ -71,18 +71,19 @@ impl<T: 'static> SparseSet for ComponentPool<T> {
     }
 
     fn remove(&mut self, owner: Entity) {
-        if let Some(Some(index)) = self.sparse.get(owner.id()) {
-            let last_index = self.dense.len() - 1;
-            if *index != last_index {
-                self.dense.swap(*index, last_index);
-                self.owners.swap(*index, last_index);
-                let swapped = self.owners[*index].id();
-                self.sparse[swapped] = Some(*index);
-            }
-            self.dense.pop();
-            self.owners.pop();
-            self.sparse[owner.id()] = None;
+        let Some(Some(index)) = self.sparse.get(owner.id()) else {
+            return;
+        };
+        let last_index = self.dense.len() - 1;
+        if *index != last_index {
+            self.dense.swap(*index, last_index);
+            self.owners.swap(*index, last_index);
+            let swapped = self.owners[*index].id();
+            self.sparse[swapped] = Some(*index);
         }
+        self.dense.pop();
+        self.owners.pop();
+        self.sparse[owner.id()] = None;
     }
 }
 
