@@ -64,11 +64,6 @@ impl Archetype {
             self.bytes[id / Self::BITS] &= !(1 << (id % Self::BITS));
         }
     }
-
-    /// Removes every component ID from the `Archetype`.
-    pub fn reset(&mut self) {
-        self.bytes.fill(0);
-    }
 }
 
 impl PartialEq for Archetype {
@@ -173,20 +168,6 @@ mod tests {
         archetype2.add(2);
         assert!(!archetype1.is_superset_of(&archetype2));
         assert!(archetype2.is_superset_of(&archetype1));
-    }
-
-    #[test]
-    fn reset() {
-        const N: usize = 100;
-        let mut archetype = Archetype::new();
-        for i in 0..N {
-            archetype.add(i);
-            assert!(archetype.has(i));
-        }
-        archetype.reset();
-        for i in 0..N {
-            assert!(!archetype.has(i));
-        }
     }
 
     #[test]
