@@ -1,13 +1,12 @@
-#![allow(dead_code)]
-
 use super::{Archetype, Entity};
 
-struct EntityManager {
+pub struct EntityManager {
     archetypes: Vec<Option<Archetype>>,
     destroyed: Vec<Entity>,
 }
 
 impl EntityManager {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             archetypes: Vec::new(),
@@ -15,6 +14,7 @@ impl EntityManager {
         }
     }
 
+    #[must_use]
     pub fn spawn(&mut self) -> Entity {
         if let Some(entity) = self.destroyed.pop() {
             self.archetypes[entity.id()] = Some(Archetype::new());
@@ -26,21 +26,30 @@ impl EntityManager {
         }
     }
 
+    #[must_use]
+    pub fn archetype(&self, owner: Entity) -> Option<&Archetype> {
+        self.archetypes.get(owner.id())?.as_ref()
+    }
+
+    #[must_use]
+    pub fn archetype_mut(&mut self, owner: Entity) -> Option<&mut Archetype> {
+        self.archetypes.get_mut(owner.id())?.as_mut()
+    }
+
     pub fn destroy(&mut self, entity: Entity) {
-        if let Some(element) = self.archetypes.get_mut(entity.id()) {
-            if element.is_some() {
-                self.destroyed.push(entity);
-                *element = None;
-            }
+        let Some(element) = self.archetypes.get_mut(entity.id()) else {
+            return;
+        };
+        if element.is_some() {
+            self.destroyed.push(entity);
+            *element = None;
         }
     }
+}
 
-    pub fn archetype(&self, entity: Entity) -> Option<&Archetype> {
-        self.archetypes.get(entity.id())?.as_ref()
-    }
-
-    pub fn archetype_mut(&mut self, entity: Entity) -> Option<&mut Archetype> {
-        self.archetypes.get_mut(entity.id())?.as_mut()
+impl Default for EntityManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
