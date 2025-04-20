@@ -36,6 +36,13 @@ impl Archetype {
             && self.bytes[id / Self::BITS] & 1 << (id % Self::BITS) != 0
     }
 
+    /// Returns whether the `Archetype` has a common component ID with another
+    /// `Archetype`.
+    #[must_use]
+    pub fn has_common_with(&self, other: &Self) -> bool {
+        self.bytes.iter().zip(&other.bytes).any(|(s, o)| s & o != 0)
+    }
+
     /// Returns whether the `Archetype` is the subset of another `Archetype`.
     #[must_use]
     pub fn is_subset_of(&self, other: &Self) -> bool {
@@ -104,6 +111,20 @@ mod tests {
             archetype.remove(i);
             assert!(!archetype.has(i));
         }
+    }
+
+    #[test]
+    fn has_common_with() {
+        let mut archetype1 = Archetype::new();
+        archetype1.add(0);
+        let mut archetype2 = Archetype::new();
+        archetype2.add(2);
+        assert!(!archetype1.has_common_with(&archetype2));
+        assert!(!archetype2.has_common_with(&archetype1));
+        archetype1.add(1);
+        archetype2.add(1);
+        assert!(archetype1.has_common_with(&archetype2));
+        assert!(archetype2.has_common_with(&archetype1));
     }
 
     #[test]
