@@ -36,7 +36,7 @@ impl Archetype {
             && self.bytes[id / Self::BITS] & 1 << (id % Self::BITS) != 0
     }
 
-    /// Returns whether the `Archetype` has a common component ID with another
+    /// Returns whether the `Archetype` has any common component ID with another
     /// `Archetype`.
     #[must_use]
     pub fn has_common_with(&self, other: &Self) -> bool {
