@@ -6,19 +6,12 @@ use super::{
     component_pool::{ComponentPool, SparseSet},
 };
 
-/// Manages the storage and retrieval of components of different types for
-/// entities in an ECS system.
-///
-/// Each component type is stored in its own `ComponentPool`, enabling O(1)
-/// operations for adding, retrieving, and removing components. The efficiency
-/// of accessing a `ComponentPool` of type `T` is also O(1).
 pub struct ComponentManager {
     ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
 
 impl ComponentManager {
-    /// Constructs a new `ComponentManager`.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -27,13 +20,11 @@ impl ComponentManager {
         }
     }
 
-    /// Returns the ID of the component of type `T`.
     #[must_use]
     pub fn id<T: 'static>(&self) -> Option<usize> {
         self.ids.get(&TypeId::of::<T>()).copied()
     }
 
-    /// Returns the ID of the component of type `T`.
     #[must_use]
     pub fn id_or_register<T: 'static>(&mut self) -> usize {
         *self.ids.entry(TypeId::of::<T>()).or_insert_with(|| {
@@ -43,12 +34,6 @@ impl ComponentManager {
         })
     }
 
-    /// Adds a component of type `T` for the given `Entity`.
-    ///
-    /// # Errors
-    ///
-    /// Returns the component of type `T` if the given `Entity` already has a
-    /// component of type `T` in the set.
     pub fn add<T: 'static>(
         &mut self,
         owner: Entity,
@@ -70,47 +55,36 @@ impl ComponentManager {
         }
     }
 
-    /// Returns a reference to the component of type `T` associated with the
-    /// given `Entity`.
     #[must_use]
     pub fn get<T: 'static>(&self, owner: Entity) -> Option<&T> {
         self.pool()?.get(owner)
     }
 
-    /// Returns a mutable reference to the component of type `T` associated with
-    /// the given `Entity`.
-    #[must_use]
     pub fn get_mut<T: 'static>(&mut self, owner: Entity) -> Option<&mut T> {
         self.pool_mut()?.get_mut(owner)
     }
 
-    /// Returns a slice of all components of type `T` in the set.
     #[must_use]
     pub fn all<T: 'static>(&self) -> &[T] {
         self.pool().map_or(&[], |p| p.all())
     }
 
-    /// Returns a mutable slice of all components of type `T` in the set.
     #[must_use]
     pub fn all_mut<T: 'static>(&mut self) -> &mut [T] {
         self.pool_mut().map_or(&mut [], |p| p.all_mut())
     }
 
-    /// Returns a slice of all entities that have a component of type `T` in the
-    /// set.
     #[must_use]
     pub fn owners<T: 'static>(&self) -> &[Entity] {
         self.pool::<T>().map_or(&[], |p| p.owners())
     }
 
-    /// Removes the component of type `T` associated with the given `Entity`.
     pub fn remove<T: 'static>(&mut self, owner: Entity) {
         if let Some(pool) = self.pool_mut::<T>() {
             pool.remove(owner);
         }
     }
 
-    /// Removes every component associated with the given `Entity`.
     pub fn remove_all(&mut self, owner: Entity) {
         for pool in &mut self.pools {
             pool.remove(owner);
