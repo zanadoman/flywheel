@@ -74,8 +74,16 @@ mod tests {
     fn new_spawn_destroy_archetype_archetype_mut() {
         let mut entity_manager = EntityManager::new();
         let entity1_1 = entity_manager.spawn();
+        assert!(
+            *entity_manager.archetype_mut(entity1_1).unwrap()
+                == clean_archetype()
+        );
         *entity_manager.archetype_mut(entity1_1).unwrap() = dirty_archetype();
         let entity2_1 = entity_manager.spawn();
+        assert!(
+            *entity_manager.archetype_mut(entity2_1).unwrap()
+                == clean_archetype()
+        );
         *entity_manager.archetype_mut(entity2_1).unwrap() = dirty_archetype();
         entity_manager.destroy(entity1_1);
         assert!(entity_manager.archetype(entity1_1).is_none());
