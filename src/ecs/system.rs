@@ -1,10 +1,8 @@
-#![allow(dead_code)]
-
 use super::{Archetype, Entity};
 
-trait SystemCallback = Fn(&[Entity]);
+pub trait SystemCallback = Fn(&[Entity]);
 
-struct System {
+pub struct System {
     archetype: Archetype,
     antitype: Archetype,
     sparse: Vec<Option<usize>>,

@@ -111,6 +111,8 @@ mod tests {
             archetype.remove(i);
             assert!(!archetype.has(i));
         }
+        let mut archetype = Archetype::new();
+        archetype.remove(0);
     }
 
     #[test]
