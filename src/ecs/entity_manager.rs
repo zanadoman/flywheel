@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn new_spawn_destroy_archetype_archetype_mut() {
+    fn spawn_destroy_archetype_archetype_mut() {
         let mut entity_manager = EntityManager::new();
         let entity1_1 = entity_manager.spawn();
         assert!(
