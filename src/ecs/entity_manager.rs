@@ -95,12 +95,14 @@ mod tests {
             *entity_manager.archetype_mut(entity2_2).unwrap()
                 == clean_archetype()
         );
+        *entity_manager.archetype_mut(entity2_2).unwrap() = dirty_archetype();
         let entity1_2 = entity_manager.spawn();
         assert!(entity1_2 == entity1_1);
         assert!(
             *entity_manager.archetype_mut(entity1_2).unwrap()
                 == clean_archetype()
         );
+        *entity_manager.archetype_mut(entity1_2).unwrap() = dirty_archetype();
         entity_manager.destroy(entity2_2);
         assert!(entity_manager.archetype(entity2_2).is_none());
         entity_manager.destroy(entity1_2);
