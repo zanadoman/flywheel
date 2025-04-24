@@ -11,30 +11,9 @@ impl World<'_> {
             self.systems[i].run(&mut self.manager);
             while let Some(event) = self.manager.poll_event() {
                 match event {
-                    ManagerEvent::ComponentAdded((
-                        entity,
-                        archetype,
-                        component_id,
-                    )) => {
+                    ManagerEvent::ArchetypeChanged((entity, archetype)) => {
                         for system in &mut self.systems {
-                            system.evaluate_addition(
-                                *entity,
-                                archetype,
-                                *component_id,
-                            );
-                        }
-                    }
-                    ManagerEvent::ComponentRemoved((
-                        entity,
-                        archetype,
-                        component_id,
-                    )) => {
-                        for system in &mut self.systems {
-                            system.evaluate_removal(
-                                *entity,
-                                archetype,
-                                *component_id,
-                            );
+                            system.evaluate(*entity, archetype);
                         }
                     }
                     ManagerEvent::EntityDestroyed(entity) => {

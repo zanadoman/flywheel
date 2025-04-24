@@ -27,37 +27,24 @@ impl System {
         }
     }
 
-    pub fn evaluate_addition(
-        &mut self,
-        entity: Entity,
-        archetype: &Archetype,
-        component_id: usize,
-    ) {
+    pub fn evaluate(&mut self, entity: Entity, archetype: &Archetype) {
         if let Some(Some(index)) = self.sparse.get(entity.id()) {
-            if self.antitype.has(component_id) {
+            if !self.archetype.is_subset_of(archetype)
+                || self.antitype.has_common_with(archetype)
+            {
                 self.remove_unchecked(*index);
             }
         } else if self.archetype.is_subset_of(archetype)
             && !self.antitype.has_common_with(archetype)
         {
-            self.add(entity);
-        }
-    }
-
-    pub fn evaluate_removal(
-        &mut self,
-        entity: Entity,
-        archetype: &Archetype,
-        component_id: usize,
-    ) {
-        if let Some(Some(index)) = self.sparse.get(entity.id()) {
-            if self.archetype.has(component_id) {
-                self.remove_unchecked(*index);
+            if self.sparse.len() <= entity.id() {
+                self.sparse.resize(entity.id() + 1, None);
             }
-        } else if self.archetype.is_subset_of(archetype)
-            && !self.antitype.has_common_with(archetype)
-        {
-            self.add(entity);
+            if self.sparse.get(entity.id()) == Some(&None) {
+                self.sparse[entity.id()] = Some(self.dense.len());
+                self.owners.push(entity.id());
+                self.dense.push(entity);
+            }
         }
     }
 
@@ -69,17 +56,6 @@ impl System {
 
     pub fn run(&self, manager: &mut Manager) {
         (self.callback)(manager, &self.dense);
-    }
-
-    fn add(&mut self, entity: Entity) {
-        if self.sparse.len() <= entity.id() {
-            self.sparse.resize(entity.id() + 1, None);
-        }
-        if self.sparse.get(entity.id()) == Some(&None) {
-            self.sparse[entity.id()] = Some(self.dense.len());
-            self.owners.push(entity.id());
-            self.dense.push(entity);
-        }
     }
 
     fn remove_unchecked(&mut self, index: usize) {
@@ -96,96 +72,96 @@ impl System {
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//
-//     const ENTITY0: Entity = Entity::new(0);
-//     const ENTITY1: Entity = Entity::new(1);
-//     const ENTITY2: Entity = Entity::new(2);
-//     const ENTITY3: Entity = Entity::new(3);
-//
-//     fn system_archetype() -> Archetype {
-//         let mut archetype = Archetype::new();
-//         archetype.add(0);
-//         archetype.add(1);
-//         archetype
-//     }
-//
-//     fn system_antitype() -> Archetype {
-//         let mut archetype = Archetype::new();
-//         archetype.add(2);
-//         archetype
-//     }
-//
-//     fn empty_archetype() -> Archetype {
-//         Archetype::new()
-//     }
-//
-//     fn conflicting_archetype() -> Archetype {
-//         let mut archetype = Archetype::new();
-//         archetype.add(0);
-//         archetype.add(1);
-//         archetype.add(2);
-//         archetype
-//     }
-//
-//     fn matching_archetype() -> Archetype {
-//         let mut archetype = Archetype::new();
-//         archetype.add(0);
-//         archetype.add(1);
-//         archetype
-//     }
-//
-//     fn matching_supertype() -> Archetype {
-//         let mut archetype = Archetype::new();
-//         archetype.add(0);
-//         archetype.add(1);
-//         archetype.add(3);
-//         archetype
-//     }
-//
-//     fn setup<F: SystemCallback + 'static>(callback: F) -> System {
-//         let mut system =
-//             System::new(system_archetype(), system_antitype(), callback);
-//         system.evaluate(ENTITY0, &empty_archetype());
-//         system.evaluate(ENTITY1, &conflicting_archetype());
-//         system.evaluate(ENTITY2, &matching_archetype());
-//         system.evaluate(ENTITY3, &matching_supertype());
-//         system
-//     }
-//
-//     #[test]
-//     fn evaluate_remove_run() {
-//         setup(|_, entities| {
-//             assert_eq!(entities.len(), 2);
-//             assert!(!entities.contains(&ENTITY0));
-//             assert!(!entities.contains(&ENTITY1));
-//             assert!(entities.contains(&ENTITY2));
-//             assert!(entities.contains(&ENTITY3));
-//         })
-//         .run(&mut Manager::new());
-//         let mut system = setup(|_, entities| {
-//             assert_eq!(entities.len(), 1);
-//             assert!(!entities.contains(&ENTITY0));
-//             assert!(!entities.contains(&ENTITY1));
-//             assert!(!entities.contains(&ENTITY2));
-//             assert!(entities.contains(&ENTITY3));
-//         });
-//         system.evaluate(ENTITY2, &empty_archetype());
-//         system.run(&mut Manager::new());
-//         let mut system = setup(|_, entities| {
-//             assert_eq!(entities.len(), 1);
-//             assert!(!entities.contains(&ENTITY0));
-//             assert!(!entities.contains(&ENTITY1));
-//             assert!(entities.contains(&ENTITY2));
-//             assert!(!entities.contains(&ENTITY3));
-//         });
-//         system.evaluate(ENTITY3, &conflicting_archetype());
-//         system.run(&mut Manager::new());
-//         let mut system = setup(|_, entities| assert_eq!(entities.len(), 0));
-//         system.remove(ENTITY2);
-//         system.remove(ENTITY3);
-//         system.run(&mut Manager::new());
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ENTITY0: Entity = Entity::new(0);
+    const ENTITY1: Entity = Entity::new(1);
+    const ENTITY2: Entity = Entity::new(2);
+    const ENTITY3: Entity = Entity::new(3);
+
+    fn system_archetype() -> Archetype {
+        let mut archetype = Archetype::new();
+        archetype.add(0);
+        archetype.add(1);
+        archetype
+    }
+
+    fn system_antitype() -> Archetype {
+        let mut archetype = Archetype::new();
+        archetype.add(2);
+        archetype
+    }
+
+    fn empty_archetype() -> Archetype {
+        Archetype::new()
+    }
+
+    fn conflicting_archetype() -> Archetype {
+        let mut archetype = Archetype::new();
+        archetype.add(0);
+        archetype.add(1);
+        archetype.add(2);
+        archetype
+    }
+
+    fn matching_archetype() -> Archetype {
+        let mut archetype = Archetype::new();
+        archetype.add(0);
+        archetype.add(1);
+        archetype
+    }
+
+    fn matching_supertype() -> Archetype {
+        let mut archetype = Archetype::new();
+        archetype.add(0);
+        archetype.add(1);
+        archetype.add(3);
+        archetype
+    }
+
+    fn setup<F: SystemCallback + 'static>(callback: F) -> System {
+        let mut system =
+            System::new(system_archetype(), system_antitype(), callback);
+        system.evaluate(ENTITY0, &empty_archetype());
+        system.evaluate(ENTITY1, &conflicting_archetype());
+        system.evaluate(ENTITY2, &matching_archetype());
+        system.evaluate(ENTITY3, &matching_supertype());
+        system
+    }
+
+    #[test]
+    fn evaluate_remove_run() {
+        setup(|_, entities| {
+            assert_eq!(entities.len(), 2);
+            assert!(!entities.contains(&ENTITY0));
+            assert!(!entities.contains(&ENTITY1));
+            assert!(entities.contains(&ENTITY2));
+            assert!(entities.contains(&ENTITY3));
+        })
+        .run(&mut Manager::new());
+        let mut system = setup(|_, entities| {
+            assert_eq!(entities.len(), 1);
+            assert!(!entities.contains(&ENTITY0));
+            assert!(!entities.contains(&ENTITY1));
+            assert!(!entities.contains(&ENTITY2));
+            assert!(entities.contains(&ENTITY3));
+        });
+        system.evaluate(ENTITY2, &empty_archetype());
+        system.run(&mut Manager::new());
+        let mut system = setup(|_, entities| {
+            assert_eq!(entities.len(), 1);
+            assert!(!entities.contains(&ENTITY0));
+            assert!(!entities.contains(&ENTITY1));
+            assert!(entities.contains(&ENTITY2));
+            assert!(!entities.contains(&ENTITY3));
+        });
+        system.evaluate(ENTITY3, &conflicting_archetype());
+        system.run(&mut Manager::new());
+        let mut system = setup(|_, entities| assert_eq!(entities.len(), 0));
+        system.remove(ENTITY2);
+        system.remove(ENTITY3);
+        system.run(&mut Manager::new());
+    }
+}

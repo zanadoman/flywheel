@@ -4,8 +4,7 @@ use super::{
 };
 
 pub(super) enum ManagerEvent<'a> {
-    ComponentAdded((Entity, &'a Archetype, usize)),
-    ComponentRemoved((Entity, &'a Archetype, usize)),
+    ArchetypeChanged((Entity, &'a Archetype)),
     EntityDestroyed(Entity),
 }
 
@@ -111,11 +110,8 @@ impl<'a> Manager<'a> {
         let component_id = self.components.id_or_register::<T>();
         self.components.add(owner, component)?;
         owner_archetype.add(component_id);
-        self.events.push(ManagerEvent::ComponentAdded((
-            owner,
-            owner_archetype,
-            component_id,
-        )));
+        self.events
+            .push(ManagerEvent::ArchetypeChanged((owner, owner_archetype)));
         Ok(())
     }
 
@@ -158,11 +154,8 @@ impl<'a> Manager<'a> {
             return;
         }
         owner_archetype.remove(component_id);
-        self.events.push(ManagerEvent::ComponentRemoved((
-            owner,
-            owner_archetype,
-            component_id,
-        )));
+        self.events
+            .push(ManagerEvent::ArchetypeChanged((owner, owner_archetype)));
         self.components.remove::<T>(owner);
     }
 
