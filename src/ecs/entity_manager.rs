@@ -1,6 +1,6 @@
-use super::{Archetype, Entity};
+use super::{Entity, archetype::Archetype};
 
-pub struct EntityManager {
+pub(super) struct EntityManager {
     entities: Vec<(bool, Archetype)>,
     destroyed: Vec<usize>,
 }

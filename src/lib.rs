@@ -1,4 +1,4 @@
-#![feature(extern_types, negative_impls)]
+#![feature(extern_types, negative_impls, trait_alias)]
 #![deny(warnings)]
 #![warn(clippy::cargo, clippy::nursery, clippy::pedantic, missing_docs)]
 
@@ -10,7 +10,6 @@
 //! rendering and input handling.
 
 pub use self::{
-    ecs::{Archetype, ComponentManager, Entity},
     engine::{Context, ContextData},
     geometry::{
         Angle, Matrix, Position, Rectangle, Scale, Vector, into_degs, into_rads,

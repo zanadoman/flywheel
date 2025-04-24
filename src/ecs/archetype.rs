@@ -3,7 +3,7 @@ type Byte = usize;
 /// ECS `Archetype` representing the set of component IDs associated with an
 /// `Entity`.
 #[derive(Debug, Eq, Clone)]
-pub struct Archetype {
+pub(super) struct Archetype {
     count: usize,
     bytes: Vec<Byte>,
 }

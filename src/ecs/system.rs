@@ -1,8 +1,8 @@
-use super::{Archetype, Entity};
+use super::{Entity, archetype::Archetype};
 
 pub trait SystemCallback = Fn(&[Entity]);
 
-pub struct System {
+pub(super) struct System {
     archetype: Archetype,
     antitype: Archetype,
     sparse: Vec<Option<usize>>,

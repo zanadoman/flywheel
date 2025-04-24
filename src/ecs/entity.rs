@@ -4,15 +4,11 @@
 pub struct Entity(usize);
 
 impl Entity {
-    /// Constructs a new `Entity` from the given ID.
-    #[must_use]
-    pub const fn new(id: usize) -> Self {
+    pub(super) const fn new(id: usize) -> Self {
         Self(id)
     }
 
-    /// Returns the ID of the `Entity`.
-    #[must_use]
-    pub const fn id(&self) -> usize {
+    pub(super) const fn id(self) -> usize {
         self.0
     }
 }

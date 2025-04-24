@@ -2,13 +2,13 @@ use core::any::Any;
 
 use super::Entity;
 
-pub trait SparseSet: Any {
+pub(super) trait SparseSet: Any {
     fn owners(&self) -> &[Entity];
 
     fn remove(&mut self, owner: Entity);
 }
 
-pub struct ComponentPool<T> {
+pub(super) struct ComponentPool<T> {
     sparse: Vec<Option<usize>>,
     owners: Vec<Entity>,
     dense: Vec<T>,

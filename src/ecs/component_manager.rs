@@ -6,7 +6,7 @@ use super::{
     component_pool::{ComponentPool, SparseSet},
 };
 
-pub struct ComponentManager {
+pub(super) struct ComponentManager {
     ids: HashMap<TypeId, usize>,
     pools: Vec<Box<dyn SparseSet>>,
 }
