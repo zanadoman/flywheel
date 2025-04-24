@@ -12,6 +12,7 @@ pub(super) struct System {
 }
 
 impl System {
+    #[must_use]
     pub fn new<F: SystemCallback + 'static>(
         archetype: Archetype,
         antitype: Archetype,
@@ -81,6 +82,7 @@ mod tests {
     const ENTITY2: Entity = Entity::new(2);
     const ENTITY3: Entity = Entity::new(3);
 
+    #[must_use]
     fn system_archetype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(0);
@@ -88,16 +90,19 @@ mod tests {
         archetype
     }
 
+    #[must_use]
     fn system_antitype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(2);
         archetype
     }
 
+    #[must_use]
     fn empty_archetype() -> Archetype {
         Archetype::new()
     }
 
+    #[must_use]
     fn conflicting_archetype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(0);
@@ -106,6 +111,7 @@ mod tests {
         archetype
     }
 
+    #[must_use]
     fn matching_archetype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(0);
@@ -113,6 +119,7 @@ mod tests {
         archetype
     }
 
+    #[must_use]
     fn matching_supertype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(0);
@@ -121,6 +128,7 @@ mod tests {
         archetype
     }
 
+    #[must_use]
     fn setup<F: SystemCallback + 'static>(callback: F) -> System {
         let mut system =
             System::new(system_archetype(), system_antitype(), callback);

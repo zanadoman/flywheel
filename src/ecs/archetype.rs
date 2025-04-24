@@ -1,8 +1,5 @@
 type Byte = usize;
 
-/// ECS `Archetype` representing the set of component IDs associated with an
-/// `Entity`.
-#[derive(Debug, Eq, Clone)]
 pub(super) struct Archetype {
     count: usize,
     bytes: Vec<Byte>,
@@ -11,7 +8,6 @@ pub(super) struct Archetype {
 impl Archetype {
     const BITS: usize = Byte::BITS as usize;
 
-    /// Constructs a new empty `Archetype`.
     #[must_use]
     pub const fn new() -> Self {
         Self {
@@ -20,7 +16,6 @@ impl Archetype {
         }
     }
 
-    /// Adds a component ID to the `Archetype`.
     pub fn add(&mut self, id: usize) {
         if self.count <= id {
             self.count = id + 1;
@@ -29,21 +24,17 @@ impl Archetype {
         self.bytes[id / Self::BITS] |= 1 << (id % Self::BITS);
     }
 
-    /// Returns whether the `Archetype` has a component ID.
     #[must_use]
     pub fn has(&self, id: usize) -> bool {
         id < self.count
             && self.bytes[id / Self::BITS] & 1 << (id % Self::BITS) != 0
     }
 
-    /// Returns whether the `Archetype` has any common component ID with another
-    /// `Archetype`.
     #[must_use]
     pub fn has_common_with(&self, other: &Self) -> bool {
         self.bytes.iter().zip(&other.bytes).any(|(s, o)| s & o != 0)
     }
 
-    /// Returns whether the `Archetype` is the subset of another `Archetype`.
     #[must_use]
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.count <= other.count
@@ -54,7 +45,6 @@ impl Archetype {
                 .all(|(s, o)| s & o == *s)
     }
 
-    /// Returns whether the `Archetype` is the superset of another `Archetype`.
     #[must_use]
     pub fn is_superset_of(&self, other: &Self) -> bool {
         other.count <= self.count
@@ -65,14 +55,12 @@ impl Archetype {
                 .all(|(o, s)| o & s == *o)
     }
 
-    /// Removes a component ID from the `Archetype`.
     pub fn remove(&mut self, id: usize) {
         if id < self.count {
             self.bytes[id / Self::BITS] &= !(1 << (id % Self::BITS));
         }
     }
 
-    /// Removes every component ID from the `Archetype`.
     pub fn reset(&mut self) {
         self.bytes.fill(0);
     }

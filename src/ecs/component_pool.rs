@@ -3,6 +3,7 @@ use core::any::Any;
 use super::Entity;
 
 pub(super) trait SparseSet: Any {
+    #[must_use]
     fn owners(&self) -> &[Entity];
 
     fn remove(&mut self, owner: Entity);
@@ -95,6 +96,7 @@ mod tests {
     const ENTITY1: Entity = Entity::new(1);
     const ENTITY2: Entity = Entity::new(2);
 
+    #[must_use]
     fn setup() -> ComponentPool<usize> {
         let mut component_pool = ComponentPool::new();
         component_pool.add(ENTITY0, ENTITY0.id()).unwrap();

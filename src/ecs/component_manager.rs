@@ -60,6 +60,7 @@ impl ComponentManager {
         self.pool()?.get(owner)
     }
 
+    #[must_use]
     pub fn get_mut<T: 'static>(&mut self, owner: Entity) -> Option<&mut T> {
         self.pool_mut()?.get_mut(owner)
     }
@@ -141,6 +142,7 @@ mod tests {
     const ENTITY2_ARROWS: u8 = 11;
     const ENTITY2_POINTS: u8 = 12;
 
+    #[must_use]
     fn setup() -> ComponentManager {
         let mut component_manager = ComponentManager::new();
         component_manager

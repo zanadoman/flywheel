@@ -16,6 +16,7 @@ pub struct Manager<'a> {
 }
 
 impl<'a> Manager<'a> {
+    #[must_use]
     pub(super) fn new() -> Self {
         Self {
             entities: EntityManager::new(),
@@ -25,10 +26,12 @@ impl<'a> Manager<'a> {
         }
     }
 
+    #[must_use]
     pub(super) fn component_id_or_register<T: 'static>(&mut self) -> usize {
         self.components.id_or_register::<T>()
     }
 
+    #[must_use]
     pub(super) fn poll_event(&mut self) -> Option<&ManagerEvent> {
         if self.events.len() <= self.next {
             self.events.clear();

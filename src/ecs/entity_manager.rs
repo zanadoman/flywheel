@@ -60,12 +60,14 @@ impl Default for EntityManager {
 mod tests {
     use super::*;
 
+    #[must_use]
     fn dirty_archetype() -> Archetype {
         let mut archetype = Archetype::new();
         archetype.add(0);
         archetype
     }
 
+    #[must_use]
     fn clean_archetype() -> Archetype {
         Archetype::new()
     }

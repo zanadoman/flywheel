@@ -4,10 +4,12 @@
 pub struct Entity(usize);
 
 impl Entity {
+    #[must_use]
     pub(super) const fn new(id: usize) -> Self {
         Self(id)
     }
 
+    #[must_use]
     pub(super) const fn id(self) -> usize {
         self.0
     }
