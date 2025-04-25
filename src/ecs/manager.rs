@@ -6,9 +6,6 @@ use super::{
 pub struct Manager {
     entities: EntityManager,
     components: ComponentManager,
-    sparse: Vec<bool>,
-    dense: Vec<Entity>,
-    next: usize,
 }
 
 impl Manager {
@@ -17,9 +14,6 @@ impl Manager {
         Self {
             entities: EntityManager::new(),
             components: ComponentManager::new(),
-            sparse: Vec::new(),
-            dense: Vec::new(),
-            next: 0,
         }
     }
 
@@ -34,17 +28,8 @@ impl Manager {
     }
 
     #[must_use]
-    pub(super) fn poll_changed(&mut self) -> Option<Entity> {
-        if self.dense.len() <= self.next {
-            self.dense.clear();
-            self.next = 0;
-            None
-        } else {
-            let entity = self.dense[self.next];
-            self.sparse[entity.id()] = false;
-            self.next += 1;
-            Some(entity)
-        }
+    pub(super) fn poll_dirty(&mut self) -> Option<Entity> {
+        self.entities.poll_dirty()
     }
 
     #[must_use]
@@ -118,7 +103,6 @@ impl Manager {
         let component_id = self.components.id_or_register::<T>();
         self.components.add(owner, component)?;
         owner_archetype.add(component_id);
-        self.set_changed(owner);
         Ok(())
     }
 
@@ -162,23 +146,11 @@ impl Manager {
         }
         self.components.remove::<T>(owner);
         owner_archetype.remove(component_id);
-        self.set_changed(owner);
     }
 
     pub fn destroy_entity(&mut self, entity: Entity) {
         self.components.remove_all(entity);
         self.entities.destroy(entity);
-        self.set_changed(entity);
-    }
-
-    fn set_changed(&mut self, entity: Entity) {
-        if self.sparse.len() <= entity.id() {
-            self.sparse.resize(entity.id() + 1, false);
-        }
-        if !self.sparse[entity.id()] {
-            self.sparse[entity.id()] = true;
-            self.dense.push(entity);
-        }
     }
 }
 
