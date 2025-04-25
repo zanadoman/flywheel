@@ -29,7 +29,7 @@ impl<T> ComponentPool<T> {
         if self.sparse.len() <= owner.id() {
             self.sparse.resize(owner.id() + 1, None);
         }
-        if self.sparse.get(owner.id()) == Some(&None) {
+        if self.sparse[owner.id()].is_none() {
             self.sparse[owner.id()] = Some(self.dense.len());
             self.owners.push(owner);
             self.dense.push(component);

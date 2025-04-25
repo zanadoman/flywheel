@@ -2,11 +2,42 @@ use super::{Entity, Manager, archetype::Archetype};
 
 pub trait SystemCallback = Fn(&mut Manager, &[Entity]);
 
+// pub(super) struct SystemBuilder<'a> {
+//     manager: &'a mut Manager<'a>,
+//     archetype: Archetype,
+//     antitype: Archetype,
+//     callback: Box<dyn SystemCallback>,
+// }
+//
+// impl SystemBuilder<'_> {
+//     fn with<T: 'static>(mut self) -> Self {
+//         self.archetype
+//             .add(self.manager.component_id_or_register::<T>());
+//         self
+//     }
+//
+//     fn without<T: 'static>(mut self) -> Self {
+//         self.antitype
+//             .add(self.manager.component_id_or_register::<T>());
+//         self
+//     }
+//
+//     fn build(self) -> System {
+//         System {
+//             archetype: self.archetype,
+//             antitype: self.antitype,
+//             sparse: Vec::new(),
+//             owners: Vec::new(),
+//             dense: Vec::new(),
+//             callback: self.callback,
+//         }
+//     }
+// }
+
 pub(super) struct System {
     archetype: Archetype,
     antitype: Archetype,
     sparse: Vec<Option<usize>>,
-    owners: Vec<usize>,
     dense: Vec<Entity>,
     callback: Box<dyn SystemCallback>,
 }
@@ -22,7 +53,6 @@ impl System {
             archetype,
             antitype,
             sparse: Vec::new(),
-            owners: Vec::new(),
             dense: Vec::new(),
             callback: Box::new(callback),
         }
@@ -41,9 +71,8 @@ impl System {
             if self.sparse.len() <= entity.id() {
                 self.sparse.resize(entity.id() + 1, None);
             }
-            if self.sparse.get(entity.id()) == Some(&None) {
+            if self.sparse[entity.id()].is_none() {
                 self.sparse[entity.id()] = Some(self.dense.len());
-                self.owners.push(entity.id());
                 self.dense.push(entity);
             }
         }
@@ -63,12 +92,10 @@ impl System {
         let last_index = self.dense.len() - 1;
         if index != last_index {
             self.dense.swap(index, last_index);
-            self.owners.swap(index, last_index);
-            let swapped = self.owners[index];
+            let swapped = self.dense[index].id();
             self.sparse[swapped] = Some(index);
         }
         self.dense.pop();
-        self.owners.pop();
         self.sparse[index] = None;
     }
 }
