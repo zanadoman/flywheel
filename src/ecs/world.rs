@@ -1,25 +1,22 @@
-use super::{Manager, manager::ManagerEvent, system::System};
+use super::{Manager, system::System};
 
-pub struct World<'a> {
-    manager: Manager<'a>,
+pub struct World {
+    manager: Manager,
     systems: Vec<System>,
 }
 
-impl World<'_> {
+impl World {
     pub fn run(&mut self) {
         for i in 0..self.systems.len() {
             self.systems[i].run(&mut self.manager);
-            while let Some(event) = self.manager.poll_event() {
-                match event {
-                    ManagerEvent::ArchetypeChanged((entity, archetype)) => {
-                        for system in &mut self.systems {
-                            system.evaluate(*entity, archetype);
-                        }
+            while let Some(entity) = self.manager.poll_changed() {
+                if let Some(archetype) = self.manager.entity_archetype(entity) {
+                    for system in &mut self.systems {
+                        system.evaluate(entity, archetype);
                     }
-                    ManagerEvent::EntityDestroyed(entity) => {
-                        for system in &mut self.systems {
-                            system.remove(*entity);
-                        }
+                } else {
+                    for system in &mut self.systems {
+                        system.remove(entity);
                     }
                 }
             }
