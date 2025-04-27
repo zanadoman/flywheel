@@ -68,10 +68,18 @@ mod tests {
     #[test]
     fn add() {
         let mut resource_manager = setup();
-        assert_eq!(resource_manager.add::<i8>(I8_VALUE * 3), Some(I8_VALUE));
-        assert_eq!(resource_manager.add::<i16>(I16_VALUE * 3), Some(I16_VALUE));
-        assert!(resource_manager.add::<i32>(I32_VALUE).is_none());
-        assert!(resource_manager.add::<i64>(I64_VALUE).is_none());
+        let value = I8_VALUE * 3;
+        assert_eq!(resource_manager.add::<i8>(value), Some(I8_VALUE));
+        assert_eq!(resource_manager.get::<i8>(), Some(&value));
+        let value = I16_VALUE * 3;
+        assert_eq!(resource_manager.add::<i16>(value), Some(I16_VALUE));
+        assert_eq!(resource_manager.get::<i16>(), Some(&value));
+        let value = I32_VALUE * 3;
+        assert!(resource_manager.add::<i32>(value).is_none());
+        assert_eq!(resource_manager.get::<i32>(), Some(&value));
+        let value = I64_VALUE * 3;
+        assert!(resource_manager.add::<i64>(value).is_none());
+        assert_eq!(resource_manager.get::<i64>(), Some(&value));
     }
 
     #[test]
