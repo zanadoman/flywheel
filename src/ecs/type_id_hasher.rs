@@ -22,8 +22,7 @@ pub mod tests {
     #[test]
     fn test() {
         let mut type_id_hasher = TypeIdHasher::default();
-        let type_id = TypeId::of::<i32>();
-        type_id.hash(&mut type_id_hasher);
+        TypeId::of::<i32>().hash(&mut type_id_hasher);
         let _ = type_id_hasher.finish();
     }
 }
