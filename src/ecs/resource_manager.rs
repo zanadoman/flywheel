@@ -55,7 +55,6 @@ mod tests {
     const I8_VALUE: i8 = i8::BITS as i8;
     const I16_VALUE: i16 = i16::BITS as i16;
     const I32_VALUE: i32 = i32::BITS as i32;
-    const I64_VALUE: i64 = i64::BITS as i64;
 
     #[must_use]
     fn setup() -> ResourceManager {
@@ -76,8 +75,6 @@ mod tests {
         assert_eq!(resource_manager.get::<i16>(), Some(&value));
         assert!(resource_manager.add::<i32>(I32_VALUE).is_none());
         assert_eq!(resource_manager.get::<i32>(), Some(&I32_VALUE));
-        assert!(resource_manager.add::<i64>(I64_VALUE).is_none());
-        assert_eq!(resource_manager.get::<i64>(), Some(&I64_VALUE));
     }
 
     #[test]
@@ -86,7 +83,6 @@ mod tests {
         assert!(resource_manager.has::<i8>());
         assert!(resource_manager.has::<i16>());
         assert!(!resource_manager.has::<i32>());
-        assert!(!resource_manager.has::<i64>());
     }
 
     #[test]
@@ -95,7 +91,6 @@ mod tests {
         assert_eq!(resource_manager.get::<i8>(), Some(&I8_VALUE));
         assert_eq!(resource_manager.get::<i16>(), Some(&I16_VALUE));
         assert!(resource_manager.get::<i32>().is_none());
-        assert!(resource_manager.get::<i64>().is_none());
     }
 
     #[test]
@@ -106,12 +101,13 @@ mod tests {
         let mut value = I16_VALUE;
         assert_eq!(resource_manager.get_mut::<i16>(), Some(&mut value));
         assert!(resource_manager.get_mut::<i32>().is_none());
-        assert!(resource_manager.get_mut::<i64>().is_none());
     }
 
     #[test]
     fn remove() {
         let mut resource_manager = setup();
+        assert!(resource_manager.remove::<i32>().is_none());
+        assert_eq!(resource_manager.get::<i8>(), Some(&I8_VALUE));
         assert_eq!(resource_manager.remove::<i8>(), Some(I8_VALUE));
         assert!(resource_manager.get::<i8>().is_none());
         assert!(resource_manager.remove::<i8>().is_none());
@@ -119,6 +115,7 @@ mod tests {
         assert_eq!(resource_manager.remove::<i16>(), Some(I16_VALUE));
         assert!(resource_manager.get::<i16>().is_none());
         assert!(resource_manager.remove::<i16>().is_none());
+        assert!(resource_manager.remove::<i32>().is_none());
     }
 
     #[test]
