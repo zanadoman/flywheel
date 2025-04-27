@@ -74,12 +74,10 @@ mod tests {
         let value = I16_VALUE * 3;
         assert_eq!(resource_manager.add::<i16>(value), Some(I16_VALUE));
         assert_eq!(resource_manager.get::<i16>(), Some(&value));
-        let value = I32_VALUE * 3;
-        assert!(resource_manager.add::<i32>(value).is_none());
-        assert_eq!(resource_manager.get::<i32>(), Some(&value));
-        let value = I64_VALUE * 3;
-        assert!(resource_manager.add::<i64>(value).is_none());
-        assert_eq!(resource_manager.get::<i64>(), Some(&value));
+        assert!(resource_manager.add::<i32>(I32_VALUE).is_none());
+        assert_eq!(resource_manager.get::<i32>(), Some(&I32_VALUE));
+        assert!(resource_manager.add::<i64>(I64_VALUE).is_none());
+        assert_eq!(resource_manager.get::<i64>(), Some(&I64_VALUE));
     }
 
     #[test]
