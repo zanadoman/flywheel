@@ -42,6 +42,10 @@ impl ResourceManager {
             .remove(&TypeId::of::<T>())
             .map(|r| *r.downcast().unwrap())
     }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
 }
 
 #[cfg(test)]
@@ -104,9 +108,18 @@ mod tests {
         let mut resource_manager = setup();
         assert_eq!(resource_manager.remove::<i8>(), Some(I8_VALUE));
         assert!(resource_manager.get::<i8>().is_none());
+        assert!(resource_manager.remove::<i8>().is_none());
         assert_eq!(resource_manager.get::<i16>(), Some(&I16_VALUE));
         assert_eq!(resource_manager.remove::<i16>(), Some(I16_VALUE));
         assert!(resource_manager.get::<i16>().is_none());
-        assert!(resource_manager.remove::<i8>().is_none());
+        assert!(resource_manager.remove::<i16>().is_none());
+    }
+
+    #[test]
+    fn clear() {
+        let mut resource_manager = setup();
+        resource_manager.clear();
+        assert!(resource_manager.get::<i8>().is_none());
+        assert!(resource_manager.get::<i16>().is_none());
     }
 }
