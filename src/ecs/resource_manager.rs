@@ -37,8 +37,10 @@ impl ResourceManager {
         self.0.get_mut(&TypeId::of::<T>())?.downcast_mut()
     }
 
-    pub fn remove<T: 'static>(&mut self) {
-        self.0.remove(&TypeId::of::<T>());
+    pub fn remove<T: 'static>(&mut self) -> Option<T> {
+        self.0
+            .remove(&TypeId::of::<T>())
+            .map(|r| *r.downcast().unwrap())
     }
 }
 
@@ -100,11 +102,11 @@ mod tests {
     #[test]
     fn remove() {
         let mut resource_manager = setup();
-        resource_manager.remove::<i8>();
+        assert_eq!(resource_manager.remove::<i8>(), Some(I8_VALUE));
         assert!(resource_manager.get::<i8>().is_none());
         assert_eq!(resource_manager.get::<i16>(), Some(&I16_VALUE));
-        resource_manager.remove::<i16>();
+        assert_eq!(resource_manager.remove::<i16>(), Some(I16_VALUE));
         assert!(resource_manager.get::<i16>().is_none());
-        resource_manager.remove::<i8>();
+        assert!(resource_manager.remove::<i8>().is_none());
     }
 }
