@@ -52,9 +52,9 @@ impl ResourceManager {
 mod tests {
     use super::*;
 
-    const I8_VALUE: i8 = i8::BITS as i8;
-    const I16_VALUE: i16 = i16::BITS as i16;
-    const I32_VALUE: i32 = i32::BITS as i32;
+    const I8_VALUE: i8 = 8;
+    const I16_VALUE: i16 = 16;
+    const I32_VALUE: i32 = 32;
 
     #[must_use]
     fn setup() -> ResourceManager {
