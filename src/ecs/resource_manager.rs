@@ -59,8 +59,8 @@ mod tests {
     #[must_use]
     fn setup() -> ResourceManager {
         let mut resource_manager = ResourceManager::new();
-        assert!(resource_manager.add::<i8>(I8_VALUE).is_none());
-        assert!(resource_manager.add::<i16>(I16_VALUE).is_none());
+        assert!(resource_manager.add(I8_VALUE).is_none());
+        assert!(resource_manager.add(I16_VALUE).is_none());
         resource_manager
     }
 
@@ -68,13 +68,13 @@ mod tests {
     fn add() {
         let mut resource_manager = setup();
         let value = I8_VALUE * 3;
-        assert_eq!(resource_manager.add::<i8>(value), Some(I8_VALUE));
-        assert_eq!(resource_manager.get::<i8>(), Some(&value));
+        assert_eq!(resource_manager.add(value), Some(I8_VALUE));
+        assert_eq!(resource_manager.get(), Some(&value));
         let value = I16_VALUE * 3;
-        assert_eq!(resource_manager.add::<i16>(value), Some(I16_VALUE));
-        assert_eq!(resource_manager.get::<i16>(), Some(&value));
-        assert!(resource_manager.add::<i32>(I32_VALUE).is_none());
-        assert_eq!(resource_manager.get::<i32>(), Some(&I32_VALUE));
+        assert_eq!(resource_manager.add(value), Some(I16_VALUE));
+        assert_eq!(resource_manager.get(), Some(&value));
+        assert!(resource_manager.add(I32_VALUE).is_none());
+        assert_eq!(resource_manager.get(), Some(&I32_VALUE));
     }
 
     #[test]
@@ -88,8 +88,8 @@ mod tests {
     #[test]
     fn get() {
         let resource_manager = setup();
-        assert_eq!(resource_manager.get::<i8>(), Some(&I8_VALUE));
-        assert_eq!(resource_manager.get::<i16>(), Some(&I16_VALUE));
+        assert_eq!(resource_manager.get(), Some(&I8_VALUE));
+        assert_eq!(resource_manager.get(), Some(&I16_VALUE));
         assert!(resource_manager.get::<i32>().is_none());
     }
 
@@ -97,9 +97,9 @@ mod tests {
     fn get_mut() {
         let mut resource_manager = setup();
         let mut value = I8_VALUE;
-        assert_eq!(resource_manager.get_mut::<i8>(), Some(&mut value));
+        assert_eq!(resource_manager.get_mut(), Some(&mut value));
         let mut value = I16_VALUE;
-        assert_eq!(resource_manager.get_mut::<i16>(), Some(&mut value));
+        assert_eq!(resource_manager.get_mut(), Some(&mut value));
         assert!(resource_manager.get_mut::<i32>().is_none());
     }
 
@@ -107,12 +107,12 @@ mod tests {
     fn remove() {
         let mut resource_manager = setup();
         assert!(resource_manager.remove::<i32>().is_none());
-        assert_eq!(resource_manager.get::<i8>(), Some(&I8_VALUE));
-        assert_eq!(resource_manager.remove::<i8>(), Some(I8_VALUE));
+        assert_eq!(resource_manager.get(), Some(&I8_VALUE));
+        assert_eq!(resource_manager.remove(), Some(I8_VALUE));
         assert!(resource_manager.get::<i8>().is_none());
         assert!(resource_manager.remove::<i8>().is_none());
-        assert_eq!(resource_manager.get::<i16>(), Some(&I16_VALUE));
-        assert_eq!(resource_manager.remove::<i16>(), Some(I16_VALUE));
+        assert_eq!(resource_manager.get(), Some(&I16_VALUE));
+        assert_eq!(resource_manager.remove(), Some(I16_VALUE));
         assert!(resource_manager.get::<i16>().is_none());
         assert!(resource_manager.remove::<i16>().is_none());
         assert!(resource_manager.remove::<i32>().is_none());
