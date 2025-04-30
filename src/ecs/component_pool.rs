@@ -52,7 +52,7 @@ impl<T> ComponentPool<T> {
 
     #[must_use]
     pub fn has(&self, owner: Entity) -> bool {
-        self.sparse.get(owner.id()).is_some()
+        self.sparse.get(owner.id()).is_some_and(Option::is_some)
     }
 
     #[must_use]
