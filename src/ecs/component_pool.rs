@@ -1,15 +1,17 @@
-use core::any::Any;
+use std::{any::Any, mem};
 
 use super::Entity;
 
-pub(super) trait SparseSet: Any {
+pub trait AnyComponentPool: Any {
     #[must_use]
     fn owners(&self) -> &[Entity];
 
-    fn remove(&mut self, owner: Entity);
+    fn destroy(&mut self, owner: Entity);
+
+    fn clear(&mut self);
 }
 
-pub(super) struct ComponentPool<T> {
+pub struct ComponentPool<T> {
     sparse: Vec<Option<usize>>,
     owners: Vec<Entity>,
     dense: Vec<T>,
@@ -25,18 +27,32 @@ impl<T> ComponentPool<T> {
         }
     }
 
-    pub fn add(&mut self, owner: Entity, component: T) -> Result<(), T> {
+    #[must_use]
+    pub fn new_with_initial(owner: Entity, component: T) -> Self {
+        Self {
+            sparse: vec![Some(owner.id())],
+            owners: vec![owner],
+            dense: vec![component],
+        }
+    }
+
+    pub fn add(&mut self, owner: Entity, component: T) -> Option<T> {
         if self.sparse.len() <= owner.id() {
             self.sparse.resize(owner.id() + 1, None);
         }
-        if self.sparse[owner.id()].is_none() {
+        if let Some(index) = self.sparse[owner.id()] {
+            Some(mem::replace(&mut self.dense[index], component))
+        } else {
             self.sparse[owner.id()] = Some(self.dense.len());
             self.owners.push(owner);
             self.dense.push(component);
-            Ok(())
-        } else {
-            Err(component)
+            None
         }
+    }
+
+    #[must_use]
+    pub fn has(&self, owner: Entity) -> bool {
+        self.sparse.get(owner.id()).is_some()
     }
 
     #[must_use]
@@ -58,33 +74,35 @@ impl<T> ComponentPool<T> {
     pub fn all_mut(&mut self) -> &mut [T] {
         &mut self.dense
     }
-}
 
-impl<T> Default for ComponentPool<T> {
-    fn default() -> Self {
-        Self::new()
+    pub fn remove(&mut self, owner: Entity) -> Option<T> {
+        let index = (*self.sparse.get(owner.id())?)?;
+        self.sparse[owner.id()] = None;
+        Some(if index == self.dense.len() - 1 {
+            self.owners.pop().unwrap();
+            self.dense.pop().unwrap()
+        } else {
+            self.owners.swap_remove(index);
+            let swapped = self.owners[index].id();
+            self.sparse[swapped] = Some(index);
+            self.dense.swap_remove(index)
+        })
     }
 }
 
-impl<T: 'static> SparseSet for ComponentPool<T> {
+impl<T: 'static> AnyComponentPool for ComponentPool<T> {
     fn owners(&self) -> &[Entity] {
         &self.owners
     }
 
-    fn remove(&mut self, owner: Entity) {
-        let Some(Some(index)) = self.sparse.get(owner.id()) else {
-            return;
-        };
-        let last_index = self.dense.len() - 1;
-        if *index != last_index {
-            self.dense.swap(*index, last_index);
-            self.owners.swap(*index, last_index);
-            let swapped = self.owners[*index].id();
-            self.sparse[swapped] = Some(*index);
-        }
-        self.dense.pop();
-        self.owners.pop();
-        self.sparse[owner.id()] = None;
+    fn destroy(&mut self, owner: Entity) {
+        self.remove(owner);
+    }
+
+    fn clear(&mut self) {
+        self.dense.clear();
+        self.owners.clear();
+        self.sparse.fill(None);
     }
 }
 
@@ -98,24 +116,38 @@ mod tests {
 
     #[must_use]
     fn setup() -> ComponentPool<usize> {
-        let mut component_pool = ComponentPool::new();
-        component_pool.add(ENTITY0, ENTITY0.id()).unwrap();
-        component_pool.add(ENTITY1, ENTITY1.id()).unwrap();
+        let mut component_pool =
+            ComponentPool::new_with_initial(ENTITY0, ENTITY0.id());
+        assert!(component_pool.add(ENTITY1, ENTITY1.id()).is_none());
         component_pool
+    }
+
+    #[test]
+    fn new() {
+        const COMPONENT_POOL: ComponentPool<usize> = ComponentPool::new();
+        assert_eq!(COMPONENT_POOL.all().len(), 0);
+        assert_eq!(COMPONENT_POOL.owners().len(), 0);
     }
 
     #[test]
     fn add() {
         let mut component_pool = setup();
-        assert_eq!(
-            component_pool.add(ENTITY0, ENTITY0.id()),
-            Err(ENTITY0.id())
-        );
-        assert_eq!(
-            component_pool.add(ENTITY1, ENTITY1.id()),
-            Err(ENTITY1.id())
-        );
-        assert!(component_pool.add(ENTITY2, ENTITY2.id()).is_ok());
+        let value = ENTITY0.id() + 3;
+        assert_eq!(component_pool.add(ENTITY0, value), Some(ENTITY0.id()));
+        assert_eq!(component_pool.get(ENTITY0), Some(&value));
+        let value = ENTITY1.id() + 3;
+        assert_eq!(component_pool.add(ENTITY1, value), Some(ENTITY1.id()));
+        assert_eq!(component_pool.get(ENTITY1), Some(&value));
+        assert!(component_pool.add(ENTITY2, ENTITY2.id()).is_none());
+        assert_eq!(component_pool.get(ENTITY2), Some(&ENTITY2.id()));
+    }
+
+    #[test]
+    fn has() {
+        let component_pool = setup();
+        assert!(component_pool.has(ENTITY0));
+        assert!(component_pool.has(ENTITY1));
+        assert!(!component_pool.has(ENTITY2));
     }
 
     #[test]
@@ -151,6 +183,33 @@ mod tests {
     }
 
     #[test]
+    fn remove() {
+        let mut component_pool = setup();
+        assert!(component_pool.remove(ENTITY2).is_none());
+        assert_eq!(component_pool.get(ENTITY0), Some(&ENTITY0.id()));
+        assert_eq!(component_pool.remove(ENTITY0), Some(ENTITY0.id()));
+        assert!(!component_pool.has(ENTITY0));
+        assert!(component_pool.remove(ENTITY0).is_none());
+        assert_eq!(component_pool.get(ENTITY1), Some(&ENTITY1.id()));
+        assert_eq!(component_pool.remove(ENTITY1), Some(ENTITY1.id()));
+        assert!(!component_pool.has(ENTITY1));
+        assert!(component_pool.remove(ENTITY1).is_none());
+        assert!(component_pool.remove(ENTITY2).is_none());
+
+        let mut component_pool = setup();
+        assert!(component_pool.remove(ENTITY2).is_none());
+        assert_eq!(component_pool.get(ENTITY1), Some(&ENTITY1.id()));
+        assert_eq!(component_pool.remove(ENTITY1), Some(ENTITY1.id()));
+        assert!(!component_pool.has(ENTITY1));
+        assert!(component_pool.remove(ENTITY1).is_none());
+        assert_eq!(component_pool.get(ENTITY0), Some(&ENTITY0.id()));
+        assert_eq!(component_pool.remove(ENTITY0), Some(ENTITY0.id()));
+        assert!(!component_pool.has(ENTITY0));
+        assert!(component_pool.remove(ENTITY0).is_none());
+        assert!(component_pool.remove(ENTITY2).is_none());
+    }
+
+    #[test]
     fn owners() {
         let component_pool = setup();
         assert_eq!(component_pool.owners().len(), 2);
@@ -159,20 +218,39 @@ mod tests {
     }
 
     #[test]
-    fn remove() {
+    fn destroy() {
         let mut component_pool = setup();
-        component_pool.remove(ENTITY0);
-        assert!(component_pool.get(ENTITY0).is_none());
-        assert_eq!(component_pool.get(ENTITY1), Some(&ENTITY1.id()));
-        component_pool.remove(ENTITY1);
-        assert!(component_pool.get(ENTITY1).is_none());
-        component_pool.remove(ENTITY0);
-        let mut component_pool = setup();
-        component_pool.remove(ENTITY1);
+        component_pool.destroy(ENTITY2);
         assert_eq!(component_pool.get(ENTITY0), Some(&ENTITY0.id()));
-        assert!(component_pool.get(ENTITY1).is_none());
-        component_pool.remove(ENTITY0);
-        assert!(component_pool.get(ENTITY0).is_none());
-        component_pool.remove(ENTITY1);
+        component_pool.destroy(ENTITY0);
+        assert!(!component_pool.has(ENTITY0));
+        component_pool.destroy(ENTITY0);
+        assert_eq!(component_pool.get(ENTITY1), Some(&ENTITY1.id()));
+        component_pool.destroy(ENTITY1);
+        assert!(!component_pool.has(ENTITY1));
+        component_pool.destroy(ENTITY1);
+        component_pool.destroy(ENTITY2);
+
+        let mut component_pool = setup();
+        component_pool.destroy(ENTITY2);
+        assert_eq!(component_pool.get(ENTITY1), Some(&ENTITY1.id()));
+        component_pool.destroy(ENTITY1);
+        assert!(!component_pool.has(ENTITY1));
+        component_pool.destroy(ENTITY1);
+        assert_eq!(component_pool.get(ENTITY0), Some(&ENTITY0.id()));
+        component_pool.destroy(ENTITY0);
+        assert!(!component_pool.has(ENTITY0));
+        component_pool.destroy(ENTITY0);
+        component_pool.destroy(ENTITY2);
+    }
+
+    #[test]
+    fn clear() {
+        let mut component_pool = setup();
+        component_pool.clear();
+        assert!(!component_pool.has(ENTITY0));
+        assert!(!component_pool.has(ENTITY1));
+        assert!(component_pool.all().is_empty());
+        assert!(component_pool.owners().is_empty());
     }
 }

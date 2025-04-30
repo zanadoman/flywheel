@@ -109,11 +109,11 @@ mod tests {
         assert!(resource_manager.remove::<i32>().is_none());
         assert_eq!(resource_manager.get(), Some(&I8_VALUE));
         assert_eq!(resource_manager.remove(), Some(I8_VALUE));
-        assert!(resource_manager.get::<i8>().is_none());
+        assert!(!resource_manager.has::<i8>());
         assert!(resource_manager.remove::<i8>().is_none());
         assert_eq!(resource_manager.get(), Some(&I16_VALUE));
         assert_eq!(resource_manager.remove(), Some(I16_VALUE));
-        assert!(resource_manager.get::<i16>().is_none());
+        assert!(!resource_manager.has::<i16>());
         assert!(resource_manager.remove::<i16>().is_none());
         assert!(resource_manager.remove::<i32>().is_none());
     }
@@ -122,7 +122,7 @@ mod tests {
     fn clear() {
         let mut resource_manager = setup();
         resource_manager.clear();
-        assert!(resource_manager.get::<i8>().is_none());
-        assert!(resource_manager.get::<i16>().is_none());
+        assert!(!resource_manager.has::<i8>());
+        assert!(!resource_manager.has::<i16>());
     }
 }
