@@ -29,12 +29,12 @@ impl ResourceManager {
 
     #[must_use]
     pub fn get<T: 'static>(&self) -> Option<&T> {
-        self.0.get(&TypeId::of::<T>())?.downcast_ref()
+        Some(self.0.get(&TypeId::of::<T>())?.downcast_ref().unwrap())
     }
 
     #[must_use]
     pub fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        self.0.get_mut(&TypeId::of::<T>())?.downcast_mut()
+        Some(self.0.get_mut(&TypeId::of::<T>())?.downcast_mut().unwrap())
     }
 
     pub fn remove<T: 'static>(&mut self) -> Option<T> {
