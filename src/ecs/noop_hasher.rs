@@ -1,9 +1,9 @@
 use std::hash::Hasher;
 
 #[derive(Default)]
-pub struct TypeIdHasher(u64);
+pub struct NoopHasher(u64);
 
-impl Hasher for TypeIdHasher {
+impl Hasher for NoopHasher {
     fn finish(&self) -> u64 {
         self.0
     }
@@ -21,8 +21,8 @@ pub mod tests {
 
     #[test]
     fn test() {
-        let mut type_id_hasher = TypeIdHasher::default();
-        TypeId::of::<i32>().hash(&mut type_id_hasher);
-        let _ = type_id_hasher.finish();
+        let mut noop_hasher = NoopHasher::default();
+        TypeId::of::<i32>().hash(&mut noop_hasher);
+        let _ = noop_hasher.finish();
     }
 }
