@@ -4,10 +4,10 @@ use std::{
     hash::BuildHasherDefault,
 };
 
-use super::type_id_hasher::TypeIdHasher;
+use super::noop_hasher::NoopHasher;
 
 pub struct ResourceManager(
-    HashMap<TypeId, Box<dyn Any>, BuildHasherDefault<TypeIdHasher>>,
+    HashMap<TypeId, Box<dyn Any>, BuildHasherDefault<NoopHasher>>,
 );
 
 impl ResourceManager {
