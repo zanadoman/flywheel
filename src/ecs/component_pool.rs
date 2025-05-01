@@ -12,27 +12,27 @@ pub trait AnyComponentPool: Any {
 }
 
 pub struct ComponentPool<T> {
-    sparse: Vec<Option<usize>>,
-    owners: Vec<Entity>,
     dense: Vec<T>,
+    owners: Vec<Entity>,
+    sparse: Vec<Option<usize>>,
 }
 
 impl<T> ComponentPool<T> {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            sparse: Vec::new(),
-            owners: Vec::new(),
             dense: Vec::new(),
+            owners: Vec::new(),
+            sparse: Vec::new(),
         }
     }
 
     #[must_use]
     pub fn new_with_initial(owner: Entity, component: T) -> Self {
         Self {
-            sparse: vec![Some(owner.id())],
-            owners: vec![owner],
             dense: vec![component],
+            owners: vec![owner],
+            sparse: vec![Some(owner.id())],
         }
     }
 
@@ -44,8 +44,8 @@ impl<T> ComponentPool<T> {
             Some(mem::replace(&mut self.dense[index], component))
         } else {
             self.sparse[owner.id()] = Some(self.dense.len());
-            self.owners.push(owner);
             self.dense.push(component);
+            self.owners.push(owner);
             None
         }
     }
@@ -100,9 +100,9 @@ impl<T: 'static> AnyComponentPool for ComponentPool<T> {
     }
 
     fn clear(&mut self) {
-        self.dense.clear();
-        self.owners.clear();
         self.sparse.fill(None);
+        self.owners.clear();
+        self.dense.clear();
     }
 }
 
@@ -125,8 +125,8 @@ mod tests {
     #[test]
     fn new() {
         const COMPONENT_POOL: ComponentPool<usize> = ComponentPool::new();
-        assert_eq!(COMPONENT_POOL.all().len(), 0);
-        assert_eq!(COMPONENT_POOL.owners().len(), 0);
+        assert!(COMPONENT_POOL.all().is_empty());
+        assert!(COMPONENT_POOL.owners().is_empty());
     }
 
     #[test]
