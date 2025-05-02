@@ -36,7 +36,7 @@ impl<T> ComponentPool<T> {
         }
     }
 
-    pub fn add(&mut self, owner: Entity, component: T) -> Option<T> {
+    pub fn insert(&mut self, owner: Entity, component: T) -> Option<T> {
         if self.sparse.len() <= owner.id() {
             self.sparse.resize(owner.id() + 1, None);
         }
@@ -118,7 +118,7 @@ mod tests {
     fn setup() -> ComponentPool<usize> {
         let mut component_pool =
             ComponentPool::new_with_initial(ENTITY0, ENTITY0.id());
-        assert!(component_pool.add(ENTITY1, ENTITY1.id()).is_none());
+        assert!(component_pool.insert(ENTITY1, ENTITY1.id()).is_none());
         component_pool
     }
 
@@ -130,15 +130,15 @@ mod tests {
     }
 
     #[test]
-    fn add() {
+    fn insert() {
         let mut component_pool = setup();
         let value = ENTITY0.id() + 3;
-        assert_eq!(component_pool.add(ENTITY0, value), Some(ENTITY0.id()));
+        assert_eq!(component_pool.insert(ENTITY0, value), Some(ENTITY0.id()));
         assert_eq!(component_pool.get(ENTITY0), Some(&value));
         let value = ENTITY1.id() + 3;
-        assert_eq!(component_pool.add(ENTITY1, value), Some(ENTITY1.id()));
+        assert_eq!(component_pool.insert(ENTITY1, value), Some(ENTITY1.id()));
         assert_eq!(component_pool.get(ENTITY1), Some(&value));
-        assert!(component_pool.add(ENTITY2, ENTITY2.id()).is_none());
+        assert!(component_pool.insert(ENTITY2, ENTITY2.id()).is_none());
         assert_eq!(component_pool.get(ENTITY2), Some(&ENTITY2.id()));
     }
 

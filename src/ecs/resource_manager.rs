@@ -16,7 +16,7 @@ impl ResourceManager {
         Self(HashMap::default())
     }
 
-    pub fn add<T: 'static>(&mut self, resource: T) -> Option<T> {
+    pub fn insert<T: 'static>(&mut self, resource: T) -> Option<T> {
         self.0
             .insert(TypeId::of::<T>(), Box::new(resource))
             .map(|r| *r.downcast().unwrap())
@@ -59,21 +59,21 @@ mod tests {
     #[must_use]
     fn setup() -> ResourceManager {
         let mut resource_manager = ResourceManager::new();
-        assert!(resource_manager.add(I8_VALUE).is_none());
-        assert!(resource_manager.add(I16_VALUE).is_none());
+        assert!(resource_manager.insert(I8_VALUE).is_none());
+        assert!(resource_manager.insert(I16_VALUE).is_none());
         resource_manager
     }
 
     #[test]
-    fn add() {
+    fn insert() {
         let mut resource_manager = setup();
         let value = I8_VALUE * 3;
-        assert_eq!(resource_manager.add(value), Some(I8_VALUE));
+        assert_eq!(resource_manager.insert(value), Some(I8_VALUE));
         assert_eq!(resource_manager.get(), Some(&value));
         let value = I16_VALUE * 3;
-        assert_eq!(resource_manager.add(value), Some(I16_VALUE));
+        assert_eq!(resource_manager.insert(value), Some(I16_VALUE));
         assert_eq!(resource_manager.get(), Some(&value));
-        assert!(resource_manager.add(I32_VALUE).is_none());
+        assert!(resource_manager.insert(I32_VALUE).is_none());
         assert_eq!(resource_manager.get(), Some(&I32_VALUE));
     }
 

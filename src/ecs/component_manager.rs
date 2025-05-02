@@ -38,13 +38,13 @@ impl ComponentManager {
         })
     }
 
-    pub fn add<T: 'static>(
+    pub fn insert<T: 'static>(
         &mut self,
         owner: Entity,
         component: T,
     ) -> Option<T> {
         if let Some(pool) = self.pool_mut() {
-            pool.add(owner, component)
+            pool.insert(owner, component)
         } else {
             self.ids
                 .try_insert(TypeId::of::<T>(), self.pools.len())
@@ -151,10 +151,10 @@ mod tests {
     #[must_use]
     fn setup() -> ComponentManager {
         let mut component_manager = ComponentManager::new();
-        assert!(component_manager.add(ENTITY0, ENTITY0_HEALTH).is_none());
-        assert!(component_manager.add(ENTITY0, ENTITY0_DAMAGE).is_none());
-        assert!(component_manager.add(ENTITY1, ENTITY1_HEALTH).is_none());
-        assert!(component_manager.add(ENTITY1, ENTITY1_DAMAGE).is_none());
+        assert!(component_manager.insert(ENTITY0, ENTITY0_HEALTH).is_none());
+        assert!(component_manager.insert(ENTITY0, ENTITY0_DAMAGE).is_none());
+        assert!(component_manager.insert(ENTITY1, ENTITY1_HEALTH).is_none());
+        assert!(component_manager.insert(ENTITY1, ENTITY1_DAMAGE).is_none());
         component_manager
     }
 
@@ -175,42 +175,42 @@ mod tests {
     }
 
     #[test]
-    fn add() {
+    fn insert() {
         let mut component_manager = setup();
 
         let value = ENTITY0_HEALTH.0 * 10;
         assert_eq!(
-            component_manager.add(ENTITY0, Health(value)),
+            component_manager.insert(ENTITY0, Health(value)),
             Some(ENTITY0_HEALTH)
         );
         assert_eq!(component_manager.get(ENTITY0), Some(&Health(value)));
         let value = ENTITY0_DAMAGE.0 * 10;
         assert_eq!(
-            component_manager.add(ENTITY0, Damage(value)),
+            component_manager.insert(ENTITY0, Damage(value)),
             Some(ENTITY0_DAMAGE)
         );
         assert_eq!(component_manager.get(ENTITY0), Some(&Damage(value)));
-        assert!(component_manager.add(ENTITY0, ENTITY0_SHIELD).is_none());
+        assert!(component_manager.insert(ENTITY0, ENTITY0_SHIELD).is_none());
         assert_eq!(component_manager.get(ENTITY0), Some(&ENTITY0_SHIELD));
         let value = ENTITY1_HEALTH.0 * 10;
         assert_eq!(
-            component_manager.add(ENTITY1, Health(value)),
+            component_manager.insert(ENTITY1, Health(value)),
             Some(ENTITY1_HEALTH)
         );
         assert_eq!(component_manager.get(ENTITY1), Some(&Health(value)));
         let value = ENTITY1_DAMAGE.0 * 10;
         assert_eq!(
-            component_manager.add(ENTITY1, Damage(value)),
+            component_manager.insert(ENTITY1, Damage(value)),
             Some(ENTITY1_DAMAGE)
         );
         assert_eq!(component_manager.get(ENTITY1), Some(&Damage(value)));
-        assert!(component_manager.add(ENTITY1, ENTITY1_SHIELD).is_none());
+        assert!(component_manager.insert(ENTITY1, ENTITY1_SHIELD).is_none());
         assert_eq!(component_manager.get(ENTITY1), Some(&ENTITY1_SHIELD));
-        assert!(component_manager.add(ENTITY2, ENTITY2_HEALTH).is_none());
+        assert!(component_manager.insert(ENTITY2, ENTITY2_HEALTH).is_none());
         assert_eq!(component_manager.get(ENTITY2), Some(&ENTITY2_HEALTH));
-        assert!(component_manager.add(ENTITY2, ENTITY2_DAMAGE).is_none());
+        assert!(component_manager.insert(ENTITY2, ENTITY2_DAMAGE).is_none());
         assert_eq!(component_manager.get(ENTITY2), Some(&ENTITY2_DAMAGE));
-        assert!(component_manager.add(ENTITY2, ENTITY2_SHIELD).is_none());
+        assert!(component_manager.insert(ENTITY2, ENTITY2_SHIELD).is_none());
         assert_eq!(component_manager.get(ENTITY2), Some(&ENTITY2_SHIELD));
     }
 
