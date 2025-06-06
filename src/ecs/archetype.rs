@@ -1,47 +1,52 @@
-type Byte = usize;
+type Segment = usize;
 
-pub(super) struct Archetype {
+pub struct Archetype {
     count: usize,
-    bytes: Vec<Byte>,
+    segments: Vec<Segment>,
 }
 
 impl Archetype {
-    const BITS: usize = Byte::BITS as usize;
-
     #[must_use]
     pub const fn new() -> Self {
         Self {
             count: 0,
-            bytes: Vec::new(),
+            segments: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, id: usize) {
+    pub fn insert(&mut self, id: usize) {
         if self.count <= id {
             self.count = id + 1;
-            self.bytes.resize(self.count.div_ceil(Self::BITS), 0);
+            self.segments
+                .resize(self.count.div_ceil(Segment::BITS as usize), 0);
         }
-        self.bytes[id / Self::BITS] |= 1 << (id % Self::BITS);
+        self.segments[id / Segment::BITS as usize] |=
+            1 << (id % Segment::BITS as usize);
     }
 
     #[must_use]
     pub fn has(&self, id: usize) -> bool {
         id < self.count
-            && self.bytes[id / Self::BITS] & 1 << (id % Self::BITS) != 0
+            && self.segments[id / Segment::BITS as usize]
+                & 1 << (id % Segment::BITS as usize)
+                != 0
     }
 
     #[must_use]
     pub fn has_common_with(&self, other: &Self) -> bool {
-        self.bytes.iter().zip(&other.bytes).any(|(s, o)| s & o != 0)
+        self.segments
+            .iter()
+            .zip(&other.segments)
+            .any(|(s, o)| s & o != 0)
     }
 
     #[must_use]
     pub fn is_subset_of(&self, other: &Self) -> bool {
         self.count <= other.count
             && self
-                .bytes
+                .segments
                 .iter()
-                .zip(&other.bytes)
+                .zip(&other.segments)
                 .all(|(s, o)| s & o == *s)
     }
 
@@ -49,35 +54,33 @@ impl Archetype {
     pub fn is_superset_of(&self, other: &Self) -> bool {
         other.count <= self.count
             && other
-                .bytes
+                .segments
                 .iter()
-                .zip(&self.bytes)
+                .zip(&self.segments)
                 .all(|(o, s)| o & s == *o)
     }
 
     pub fn remove(&mut self, id: usize) {
         if id < self.count {
-            self.bytes[id / Self::BITS] &= !(1 << (id % Self::BITS));
+            self.segments[id / Segment::BITS as usize] &=
+                !(1 << (id % Segment::BITS as usize));
         }
     }
 
-    pub fn reset(&mut self) {
-        self.bytes.fill(0);
+    pub fn clear(&mut self) {
+        self.segments.fill(0);
     }
 }
 
 impl PartialEq for Archetype {
     fn eq(&self, other: &Self) -> bool {
-        let len = self.bytes.len().min(other.bytes.len());
-        self.bytes.iter().take(len).eq(other.bytes.iter().take(len))
-            && self.bytes.iter().skip(len).all(|b| *b == 0)
-            && other.bytes.iter().skip(len).all(|b| *b == 0)
-    }
-}
-
-impl Default for Archetype {
-    fn default() -> Self {
-        Self::new()
+        let len = self.segments.len().min(other.segments.len());
+        self.segments
+            .iter()
+            .take(len)
+            .eq(other.segments.iter().take(len))
+            && self.segments.iter().skip(len).all(|s| *s == 0)
+            && other.segments.iter().skip(len).all(|s| *s == 0)
     }
 }
 
@@ -86,12 +89,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn add_has_remove() {
+    fn insert_has_remove() {
         const N: usize = 100;
         let mut archetype = Archetype::new();
         for i in 0..N {
             assert!(!archetype.has(i));
-            archetype.add(i);
+            archetype.insert(i);
             assert!(archetype.has(i));
             archetype.remove(i);
             assert!(!archetype.has(i));
@@ -99,7 +102,7 @@ mod tests {
         let mut archetype = Archetype::new();
         for i in (0..N).rev() {
             assert!(!archetype.has(i));
-            archetype.add(i);
+            archetype.insert(i);
             assert!(archetype.has(i));
             archetype.remove(i);
             assert!(!archetype.has(i));
@@ -111,13 +114,13 @@ mod tests {
     #[test]
     fn has_common_with() {
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
+        archetype1.insert(0);
         let mut archetype2 = Archetype::new();
-        archetype2.add(2);
+        archetype2.insert(2);
         assert!(!archetype1.has_common_with(&archetype2));
         assert!(!archetype2.has_common_with(&archetype1));
-        archetype1.add(1);
-        archetype2.add(1);
+        archetype1.insert(1);
+        archetype2.insert(1);
         assert!(archetype1.has_common_with(&archetype2));
         assert!(archetype2.has_common_with(&archetype1));
     }
@@ -125,31 +128,31 @@ mod tests {
     #[test]
     fn is_subset_of() {
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(1);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(1);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(1);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(1);
+        archetype2.insert(2);
         assert!(archetype1.is_subset_of(&archetype2));
         assert!(archetype2.is_subset_of(&archetype1));
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(1);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(1);
+        archetype2.insert(2);
         assert!(archetype1.is_subset_of(&archetype2));
         assert!(!archetype2.is_subset_of(&archetype1));
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(1);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(1);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(2);
         assert!(!archetype1.is_subset_of(&archetype2));
         assert!(archetype2.is_subset_of(&archetype1));
     }
@@ -157,31 +160,31 @@ mod tests {
     #[test]
     fn is_superset_of() {
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(1);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(1);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(1);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(1);
+        archetype2.insert(2);
         assert!(archetype1.is_superset_of(&archetype2));
         assert!(archetype2.is_superset_of(&archetype1));
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(1);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(1);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(2);
         assert!(archetype1.is_superset_of(&archetype2));
         assert!(!archetype2.is_superset_of(&archetype1));
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(1);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(1);
+        archetype2.insert(2);
         assert!(!archetype1.is_superset_of(&archetype2));
         assert!(archetype2.is_superset_of(&archetype1));
     }
@@ -191,10 +194,10 @@ mod tests {
         const N: usize = 100;
         let mut archetype = Archetype::new();
         for i in 0..N {
-            archetype.add(i);
+            archetype.insert(i);
             assert!(archetype.has(i));
         }
-        archetype.reset();
+        archetype.clear();
         for i in 0..N {
             assert!(!archetype.has(i));
         }
@@ -203,25 +206,25 @@ mod tests {
     #[test]
     fn eq() {
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
-        archetype1.add(1);
-        archetype1.add(2);
+        archetype1.insert(0);
+        archetype1.insert(1);
+        archetype1.insert(2);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(2);
+        archetype2.insert(0);
+        archetype2.insert(2);
         assert!(archetype1 != archetype2);
         assert!(archetype2 != archetype1);
-        archetype2.add(1);
+        archetype2.insert(1);
         assert!(archetype1 == archetype2);
         assert!(archetype2 == archetype1);
         let mut archetype1 = Archetype::new();
-        archetype1.add(0);
+        archetype1.insert(0);
         let mut archetype2 = Archetype::new();
-        archetype2.add(0);
-        archetype2.add(Archetype::BITS);
+        archetype2.insert(0);
+        archetype2.insert(Segment::BITS as usize);
         assert!(archetype1 != archetype2);
         assert!(archetype2 != archetype1);
-        archetype2.remove(Archetype::BITS);
+        archetype2.remove(Segment::BITS as usize);
         assert!(archetype1 == archetype2);
         assert!(archetype2 == archetype1);
     }
