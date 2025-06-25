@@ -15,17 +15,20 @@ impl Archetype {
     }
 
     pub fn insert(&mut self, id: usize) -> bool {
-        if self.has(id) {
-            return true;
-        }
+        let index = id / Segment::BITS as usize;
+        let bitmask = 1 << (id % Segment::BITS as usize);
         if self.count <= id {
             self.count = id + 1;
             self.segments
                 .resize(self.count.div_ceil(Segment::BITS as usize), 0);
+            self.segments[index] |= bitmask;
+            false
+        } else if self.segments[index] & bitmask == 0 {
+            self.segments[index] |= bitmask;
+            false
+        } else {
+            true
         }
-        self.segments[id / Segment::BITS as usize] |=
-            1 << (id % Segment::BITS as usize);
-        false
     }
 
     #[must_use]
@@ -65,8 +68,10 @@ impl Archetype {
     }
 
     pub fn remove(&mut self, id: usize) -> bool {
-        if self.has(id) {
-            self.destroy(id);
+        let index = id / Segment::BITS as usize;
+        let bitmask = 1 << (id % Segment::BITS as usize);
+        if id < self.count && self.segments[index] & bitmask != 0 {
+            self.segments[index] &= !bitmask;
             true
         } else {
             false
@@ -93,7 +98,7 @@ impl PartialEq for Archetype {
             .take(len)
             .eq(other.segments.iter().take(len))
             && self.segments.iter().skip(len).all(|s| *s == 0)
-            && other.segments.iter().skip(len).all(|s| *s == 0)
+            && other.segments.iter().skip(len).all(|o| *o == 0)
     }
 }
 
