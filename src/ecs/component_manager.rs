@@ -11,16 +11,16 @@ use super::{
 };
 
 pub struct ComponentManager {
-    pools: Vec<Box<dyn AnyComponentPool>>,
     ids: HashMap<TypeId, usize, BuildHasherDefault<NoopHasher>>,
+    pools: Vec<Box<dyn AnyComponentPool>>,
 }
 
 impl ComponentManager {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            pools: Vec::new(),
             ids: HashMap::default(),
+            pools: Vec::new(),
         }
     }
 
