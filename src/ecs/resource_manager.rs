@@ -1,8 +1,8 @@
-use std::{
+use core::{
     any::{Any, TypeId},
-    collections::HashMap,
     hash::BuildHasherDefault,
 };
+use std::collections::HashMap;
 
 use super::noop_hasher::NoopHasher;
 
@@ -29,12 +29,20 @@ impl ResourceManager {
 
     #[must_use]
     pub fn get<T: 'static>(&self) -> Option<&T> {
-        Some(self.0.get(&TypeId::of::<T>())?.downcast_ref().unwrap())
+        Some(
+            (**self.0.get(&TypeId::of::<T>())?)
+                .downcast_ref::<T>()
+                .unwrap(),
+        )
     }
 
     #[must_use]
     pub fn get_mut<T: 'static>(&mut self) -> Option<&mut T> {
-        Some(self.0.get_mut(&TypeId::of::<T>())?.downcast_mut().unwrap())
+        Some(
+            (**self.0.get_mut(&TypeId::of::<T>())?)
+                .downcast_mut()
+                .unwrap(),
+        )
     }
 
     pub fn remove<T: 'static>(&mut self) -> Option<T> {

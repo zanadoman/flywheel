@@ -21,7 +21,7 @@ impl Archetype {
     }
 
     #[must_use]
-    pub fn owner(&self) -> Option<Entity> {
+    pub const fn owner(&self) -> Option<Entity> {
         self.owner
     }
 
@@ -98,11 +98,11 @@ impl Archetype {
     }
 
     #[must_use]
-    pub fn dirty(&self) -> bool {
+    pub const fn dirty(&self) -> bool {
         self.dirty
     }
 
-    pub fn flush(&mut self) {
+    pub const fn flush(&mut self) {
         self.dirty = false;
     }
 }
