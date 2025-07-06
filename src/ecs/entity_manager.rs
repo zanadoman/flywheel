@@ -1,102 +1,110 @@
-use super::{Entity, archetype::Archetype};
+use super::{Entity, entity_data::EntityData};
 
-struct EntityData {
-    alive: bool,
-    archetype: Archetype,
-    dirty: bool,
-}
-
-pub(super) struct EntityManager {
-    entities: Vec<EntityData>,
-    destroyed: Vec<usize>,
-    dirty: Vec<Entity>,
-    next_dirty: usize,
+pub struct EntityManager {
+    sparse: Vec<Option<EntityData>>,
+    destroyed: Vec<EntityData>,
 }
 
 impl EntityManager {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            entities: Vec::new(),
+            sparse: Vec::new(),
             destroyed: Vec::new(),
-            dirty: Vec::new(),
-            next_dirty: 0,
-        }
-    }
-
-    #[must_use]
-    pub fn poll_dirty(&mut self) -> Option<Entity> {
-        if self.dirty.len() <= self.next_dirty {
-            self.dirty.clear();
-            self.next_dirty = 0;
-            None
-        } else {
-            let entity = self.dirty[self.next_dirty];
-            self.entities[entity.id()].dirty = false;
-            self.next_dirty += 1;
-            Some(entity)
         }
     }
 
     #[must_use]
     pub fn spawn(&mut self) -> Entity {
-        if let Some(id) = self.destroyed.pop() {
-            self.entities[id].archetype.reset();
-            self.entities[id].alive = true;
-            Entity::new(id)
+        if let Some(entity_data) = self.destroyed.pop() {
+            let entity = entity_data.owner();
+            self.sparse[entity.id()] = Some(entity_data);
+            entity
         } else {
-            let entity = Entity::new(self.entities.len());
-            self.entities.push(EntityData {
-                alive: true,
-                archetype: Archetype::new(),
-                dirty: false,
-            });
+            let entity = Entity::new(self.sparse.len());
+            self.sparse.push(Some(EntityData::new(entity)));
             entity
         }
     }
 
     #[must_use]
-    pub fn archetype(&self, owner: Entity) -> Option<&Archetype> {
-        let data = self.entities.get(owner.id())?;
-        if data.alive {
-            Some(&data.archetype)
-        } else {
-            None
-        }
+    pub fn get(&self, owner: Entity) -> Option<&EntityData> {
+        self.sparse.get(owner.id())?.as_ref()
     }
 
-    #[must_use]
-    pub fn archetype_mut(&mut self, owner: Entity) -> Option<&mut Archetype> {
-        if owner.id() < self.entities.len() && self.entities[owner.id()].alive {
-            self.make_dirty(owner);
-            Some(&mut self.entities[owner.id()].archetype)
-        } else {
-            None
+    pub fn bind(&mut self, parent: Entity, child: Entity) {
+        if parent == child
+            || !self.sparse.get(parent.id()).is_some_and(Option::is_some)
+            || !self.sparse.get(child.id()).is_some_and(Option::is_some)
+        {
+            return;
+        }
+        if let Some(parent) = self.sparse[child.id()].as_ref().unwrap().parent()
+        {
+            self.sparse[parent.id()]
+                .as_mut()
+                .unwrap()
+                .remove_child(child);
+        }
+        let mut grand_parent = parent;
+        while let Some(root_parent) =
+            self.sparse[grand_parent.id()].as_ref().unwrap().parent()
+        {
+            if child == root_parent {
+                let parent_data = self.sparse[parent.id()].as_mut().unwrap();
+                grand_parent = parent_data.parent().unwrap();
+                parent_data.set_parent(None).unwrap();
+                self.sparse[grand_parent.id()]
+                    .as_mut()
+                    .unwrap()
+                    .remove_child(parent);
+                break;
+            }
+            grand_parent = root_parent;
+        }
+        self.sparse[child.id()]
+            .as_mut()
+            .unwrap()
+            .set_parent(Some(parent))
+            .unwrap();
+        self.sparse[parent.id()]
+            .as_mut()
+            .unwrap()
+            .insert_child(child)
+            .unwrap();
+    }
+
+    pub fn unbind(&mut self, child: Entity) {
+        if let Some(Some(entity_data)) = self.sparse.get_mut(child.id())
+            && let Some(parent) = entity_data.parent()
+        {
+            entity_data.set_parent(None).unwrap();
+            self.sparse[parent.id()]
+                .as_mut()
+                .unwrap()
+                .remove_child(child);
         }
     }
 
     pub fn destroy(&mut self, entity: Entity) {
-        let Some(data) = self.entities.get_mut(entity.id()) else {
-            return;
-        };
-        if data.alive {
-            data.alive = false;
-            self.destroyed.push(entity.id());
-            self.make_dirty(entity);
+        if let Some(Some(entity_data)) = self.sparse.get(entity.id()) {
+            if let Some(parent) = entity_data.parent() {
+                self.sparse[parent.id()]
+                    .as_mut()
+                    .unwrap()
+                    .remove_child(entity);
+            }
+            self.destroy_branch(entity);
         }
     }
 
-    fn make_dirty(&mut self, entity: Entity) {
-        if !self.entities[entity.id()].dirty {
-            self.entities[entity.id()].dirty = true;
-            self.dirty.push(entity);
+    fn destroy_branch(&mut self, entity: Entity) {
+        let mut entity_data = self.sparse[entity.id()].take().unwrap();
+        for child in entity_data.children() {
+            self.destroy_branch(*child);
         }
-    }
-}
-
-impl Default for EntityManager {
-    fn default() -> Self {
-        Self::new()
+        entity_data.clear();
+        self.destroyed.push(entity_data);
     }
 }
 
@@ -104,63 +112,56 @@ impl Default for EntityManager {
 mod tests {
     use super::*;
 
-    #[must_use]
-    fn dirty_archetype() -> Archetype {
-        let mut archetype = Archetype::new();
-        archetype.add(0);
-        archetype
-    }
-
-    #[must_use]
-    fn clean_archetype() -> Archetype {
-        Archetype::new()
+    #[test]
+    fn test0() {
+        let mut entity_manager = EntityManager::new();
+        let e0 = entity_manager.spawn();
+        entity_manager.bind(e0, e0);
     }
 
     #[test]
-    fn spawn_archetype_archetype_mut_destroy() {
+    fn test1() {
         let mut entity_manager = EntityManager::new();
-        let entity1_1 = entity_manager.spawn();
-        assert!(
-            *entity_manager.archetype(entity1_1).unwrap() == clean_archetype()
-        );
-        assert!(entity_manager.poll_dirty().is_none());
-        *entity_manager.archetype_mut(entity1_1).unwrap() = dirty_archetype();
-        assert_eq!(entity_manager.poll_dirty(), Some(entity1_1));
-        assert!(entity_manager.poll_dirty().is_none());
-        let entity2_1 = entity_manager.spawn();
-        assert!(
-            *entity_manager.archetype(entity2_1).unwrap() == clean_archetype()
-        );
-        assert!(entity_manager.poll_dirty().is_none());
-        *entity_manager.archetype_mut(entity2_1).unwrap() = dirty_archetype();
-        assert_eq!(entity_manager.poll_dirty(), Some(entity2_1));
-        assert!(entity_manager.poll_dirty().is_none());
-        entity_manager.destroy(entity1_1);
-        assert_eq!(entity_manager.poll_dirty(), Some(entity1_1));
-        assert!(entity_manager.archetype(entity1_1).is_none());
-        assert!(entity_manager.poll_dirty().is_none());
-        entity_manager.destroy(entity2_1);
-        assert_eq!(entity_manager.poll_dirty(), Some(entity2_1));
-        assert!(entity_manager.archetype(entity2_1).is_none());
-        assert!(entity_manager.poll_dirty().is_none());
-        let entity2_2 = entity_manager.spawn();
-        assert!(entity2_2 == entity2_1);
-        assert!(
-            *entity_manager.archetype(entity2_2).unwrap() == clean_archetype()
-        );
-        *entity_manager.archetype_mut(entity2_2).unwrap() = dirty_archetype();
-        let entity1_2 = entity_manager.spawn();
-        assert!(entity1_2 == entity1_1);
-        assert!(
-            *entity_manager.archetype(entity1_2).unwrap() == clean_archetype()
-        );
-        *entity_manager.archetype_mut(entity1_2).unwrap() = dirty_archetype();
-        entity_manager.destroy(entity2_2);
-        assert!(entity_manager.archetype(entity2_2).is_none());
-        entity_manager.destroy(entity1_2);
-        assert!(entity_manager.archetype(entity1_2).is_none());
-        assert_eq!(entity_manager.poll_dirty(), Some(entity2_2));
-        assert_eq!(entity_manager.poll_dirty(), Some(entity1_2));
-        assert_eq!(entity_manager.poll_dirty(), None);
+        let e0 = entity_manager.spawn();
+        let e1 = entity_manager.spawn();
+        entity_manager.bind(e0, e1);
+        entity_manager.bind(e1, e0);
+    }
+
+    #[test]
+    fn test2() {
+        let mut entity_manager = EntityManager::new();
+        let e0 = entity_manager.spawn();
+        let e1 = entity_manager.spawn();
+        let e2 = entity_manager.spawn();
+        entity_manager.bind(e0, e1);
+        entity_manager.bind(e1, e2);
+    }
+
+    #[test]
+    fn test3() {
+        let mut entity_manager = EntityManager::new();
+        let e0 = entity_manager.spawn();
+        let e1 = entity_manager.spawn();
+        let e2 = entity_manager.spawn();
+        entity_manager.bind(e0, e1);
+        entity_manager.bind(e1, e2);
+        entity_manager.bind(e2, e0);
+        entity_manager.destroy(e2);
+    }
+
+    #[test]
+    fn test4() {
+        let mut entity_manager = EntityManager::new();
+        let e0 = entity_manager.spawn();
+        let e1 = entity_manager.spawn();
+        let e2 = entity_manager.spawn();
+        let e3 = entity_manager.spawn();
+        let e4 = entity_manager.spawn();
+        entity_manager.bind(e0, e1);
+        entity_manager.bind(e1, e2);
+        entity_manager.bind(e2, e3);
+        entity_manager.bind(e3, e4);
+        entity_manager.bind(e0, e3);
     }
 }
