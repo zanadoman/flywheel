@@ -175,10 +175,7 @@ mod tests {
 
     #[test]
     fn children() {
-        let entity_data = setup();
-        assert_eq!(entity_data.children().len(), 2);
-        assert!(entity_data.children().contains(&CHILD2));
-        assert!(entity_data.children().contains(&CHILD3));
+        assert_eq!(setup().children(), [CHILD2, CHILD3]);
     }
 
     #[test]

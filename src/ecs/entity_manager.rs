@@ -113,55 +113,63 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test0() {
+    fn bind() {
         let mut entity_manager = EntityManager::new();
-        let e0 = entity_manager.spawn();
-        entity_manager.bind(e0, e0);
-    }
+        let entity0 = entity_manager.spawn();
+        entity_manager.bind(entity0, entity0);
+        assert!(entity_manager.get(entity0).unwrap().parent().is_none());
+        assert!(entity_manager.get(entity0).unwrap().children().is_empty());
 
-    #[test]
-    fn test1() {
         let mut entity_manager = EntityManager::new();
-        let e0 = entity_manager.spawn();
-        let e1 = entity_manager.spawn();
-        entity_manager.bind(e0, e1);
-        entity_manager.bind(e1, e0);
-    }
+        let entity0 = entity_manager.spawn();
+        let entity1 = entity_manager.spawn();
+        entity_manager.bind(entity0, entity1);
+        assert!(entity_manager.get(entity0).unwrap().parent().is_none());
+        assert_eq!(entity_manager.get(entity0).unwrap().children(), [entity1]);
+        assert_eq!(
+            entity_manager.get(entity1).unwrap().parent(),
+            Some(entity0)
+        );
+        assert!(entity_manager.get(entity1).unwrap().children().is_empty());
+        entity_manager.bind(entity1, entity0);
+        assert_eq!(
+            entity_manager.get(entity0).unwrap().parent(),
+            Some(entity1)
+        );
+        assert!(entity_manager.get(entity0).unwrap().children().is_empty());
+        assert!(entity_manager.get(entity1).unwrap().parent().is_none());
+        assert_eq!(entity_manager.get(entity1).unwrap().children(), [entity0]);
 
-    #[test]
-    fn test2() {
         let mut entity_manager = EntityManager::new();
-        let e0 = entity_manager.spawn();
-        let e1 = entity_manager.spawn();
-        let e2 = entity_manager.spawn();
-        entity_manager.bind(e0, e1);
-        entity_manager.bind(e1, e2);
-    }
-
-    #[test]
-    fn test3() {
-        let mut entity_manager = EntityManager::new();
-        let e0 = entity_manager.spawn();
-        let e1 = entity_manager.spawn();
-        let e2 = entity_manager.spawn();
-        entity_manager.bind(e0, e1);
-        entity_manager.bind(e1, e2);
-        entity_manager.bind(e2, e0);
-        entity_manager.destroy(e2);
-    }
-
-    #[test]
-    fn test4() {
-        let mut entity_manager = EntityManager::new();
-        let e0 = entity_manager.spawn();
-        let e1 = entity_manager.spawn();
-        let e2 = entity_manager.spawn();
-        let e3 = entity_manager.spawn();
-        let e4 = entity_manager.spawn();
-        entity_manager.bind(e0, e1);
-        entity_manager.bind(e1, e2);
-        entity_manager.bind(e2, e3);
-        entity_manager.bind(e3, e4);
-        entity_manager.bind(e0, e3);
+        let entity0 = entity_manager.spawn();
+        let entity1 = entity_manager.spawn();
+        let entity2 = entity_manager.spawn();
+        entity_manager.bind(entity0, entity1);
+        entity_manager.bind(entity1, entity2);
+        assert!(entity_manager.get(entity0).unwrap().parent().is_none());
+        assert_eq!(entity_manager.get(entity0).unwrap().children(), [entity1]);
+        assert_eq!(
+            entity_manager.get(entity1).unwrap().parent(),
+            Some(entity0)
+        );
+        assert_eq!(entity_manager.get(entity1).unwrap().children(), [entity2]);
+        assert_eq!(
+            entity_manager.get(entity2).unwrap().parent(),
+            Some(entity1)
+        );
+        assert!(entity_manager.get(entity2).unwrap().children().is_empty());
+        entity_manager.bind(entity2, entity0);
+        assert_eq!(
+            entity_manager.get(entity0).unwrap().parent(),
+            Some(entity2)
+        );
+        assert_eq!(entity_manager.get(entity0).unwrap().children(), [entity1]);
+        assert_eq!(
+            entity_manager.get(entity1).unwrap().parent(),
+            Some(entity0)
+        );
+        assert!(entity_manager.get(entity1).unwrap().children().is_empty());
+        assert!(entity_manager.get(entity2).unwrap().parent().is_none());
+        assert_eq!(entity_manager.get(entity2).unwrap().children(), [entity0]);
     }
 }

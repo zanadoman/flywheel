@@ -263,24 +263,28 @@ mod tests {
     #[test]
     fn all() {
         let component_manager = setup();
-        assert_eq!(component_manager.all::<Health>().len(), 2);
-        assert!(component_manager.all().contains(&ENTITY0_HEALTH));
-        assert!(component_manager.all().contains(&ENTITY1_HEALTH));
-        assert_eq!(component_manager.all::<Damage>().len(), 2);
-        assert!(component_manager.all().contains(&ENTITY0_DAMAGE));
-        assert!(component_manager.all().contains(&ENTITY1_DAMAGE));
+        assert_eq!(
+            component_manager.all::<Health>(),
+            [ENTITY0_HEALTH, ENTITY1_HEALTH]
+        );
+        assert_eq!(
+            component_manager.all::<Damage>(),
+            [ENTITY0_DAMAGE, ENTITY1_DAMAGE]
+        );
         assert!(component_manager.all::<Shield>().is_empty());
     }
 
     #[test]
     fn all_mut() {
         let mut component_manager = setup();
-        assert_eq!(component_manager.all_mut::<Health>().len(), 2);
-        assert!(component_manager.all_mut().contains(&ENTITY0_HEALTH));
-        assert!(component_manager.all_mut().contains(&ENTITY1_HEALTH));
-        assert_eq!(component_manager.all_mut::<Damage>().len(), 2);
-        assert!(component_manager.all_mut().contains(&ENTITY0_DAMAGE));
-        assert!(component_manager.all_mut().contains(&ENTITY1_DAMAGE));
+        assert_eq!(
+            component_manager.all_mut::<Health>(),
+            [ENTITY0_HEALTH, ENTITY1_HEALTH]
+        );
+        assert_eq!(
+            component_manager.all_mut::<Damage>(),
+            [ENTITY0_DAMAGE, ENTITY1_DAMAGE]
+        );
         assert!(component_manager.all_mut::<Shield>().is_empty());
     }
 
@@ -323,12 +327,8 @@ mod tests {
     #[test]
     fn owners() {
         let component_manager = setup();
-        assert_eq!(component_manager.owners::<Health>().len(), 2);
-        assert!(component_manager.owners::<Health>().contains(&ENTITY0));
-        assert!(component_manager.owners::<Health>().contains(&ENTITY1));
-        assert_eq!(component_manager.owners::<Damage>().len(), 2);
-        assert!(component_manager.owners::<Damage>().contains(&ENTITY0));
-        assert!(component_manager.owners::<Damage>().contains(&ENTITY1));
+        assert_eq!(component_manager.owners::<Health>(), [ENTITY0, ENTITY1]);
+        assert_eq!(component_manager.owners::<Damage>(), [ENTITY0, ENTITY1]);
         assert!(component_manager.owners::<Shield>().is_empty());
     }
 

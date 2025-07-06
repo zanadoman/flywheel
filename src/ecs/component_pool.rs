@@ -168,18 +168,12 @@ mod tests {
 
     #[test]
     fn all() {
-        let component_pool = setup();
-        assert_eq!(component_pool.all().len(), 2);
-        assert!(component_pool.all().contains(&ENTITY0.id()));
-        assert!(component_pool.all().contains(&ENTITY1.id()));
+        assert_eq!(setup().all(), [ENTITY0.id(), ENTITY1.id()]);
     }
 
     #[test]
     fn all_mut() {
-        let mut component_pool = setup();
-        assert_eq!(component_pool.all_mut().len(), 2);
-        assert!(component_pool.all_mut().contains(&ENTITY0.id()));
-        assert!(component_pool.all_mut().contains(&ENTITY1.id()));
+        assert_eq!(setup().all_mut(), [ENTITY0.id(), ENTITY1.id()]);
     }
 
     #[test]
@@ -211,10 +205,7 @@ mod tests {
 
     #[test]
     fn owners() {
-        let component_pool = setup();
-        assert_eq!(component_pool.owners().len(), 2);
-        assert!(component_pool.owners().contains(&ENTITY0));
-        assert!(component_pool.owners().contains(&ENTITY1));
+        assert_eq!(setup().owners(), [ENTITY0, ENTITY1]);
     }
 
     #[test]
