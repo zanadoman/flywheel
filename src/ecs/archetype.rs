@@ -1,28 +1,19 @@
-use super::Entity;
-
 type Segment = usize;
 
 pub struct Archetype {
-    owner: Option<Entity>,
     count: usize,
     segments: Vec<Segment>,
-    dirty: bool,
+    is_dirty: bool,
 }
 
 impl Archetype {
     #[must_use]
-    pub const fn new(owner: Option<Entity>) -> Self {
+    pub const fn new() -> Self {
         Self {
-            owner,
             count: 0,
             segments: Vec::new(),
-            dirty: false,
+            is_dirty: true,
         }
-    }
-
-    #[must_use]
-    pub const fn owner(&self) -> Option<Entity> {
-        self.owner
     }
 
     pub fn insert(&mut self, id: usize) -> bool {
@@ -33,11 +24,11 @@ impl Archetype {
             self.segments
                 .resize(self.count.div_ceil(Segment::BITS as usize), 0);
             self.segments[index] |= bitmask;
-            self.dirty = true;
+            self.is_dirty = true;
             false
         } else if self.segments[index] & bitmask == 0 {
             self.segments[index] |= bitmask;
-            self.dirty = true;
+            self.is_dirty = true;
             false
         } else {
             true
@@ -85,7 +76,7 @@ impl Archetype {
         let bitmask = 1 << (id % Segment::BITS as usize);
         if id < self.count && self.segments[index] & bitmask != 0 {
             self.segments[index] &= !bitmask;
-            self.dirty = true;
+            self.is_dirty = true;
             true
         } else {
             false
@@ -94,16 +85,16 @@ impl Archetype {
 
     pub fn clear(&mut self) {
         self.segments.fill(0);
-        self.dirty = true;
+        self.is_dirty = true;
     }
 
     #[must_use]
-    pub const fn dirty(&self) -> bool {
-        self.dirty
+    pub const fn is_dirty(&self) -> bool {
+        self.is_dirty
     }
 
     pub const fn flush(&mut self) {
-        self.dirty = false;
+        self.is_dirty = false;
     }
 }
 
@@ -123,39 +114,34 @@ impl PartialEq for Archetype {
 mod tests {
     use super::*;
 
-    const OWNER: Entity = Entity::new(0);
-
     #[must_use]
     fn setup() -> Archetype {
-        let mut archetype = Archetype::new(Some(OWNER));
-        assert!(!archetype.dirty());
+        let mut archetype = Archetype::new();
+        assert!(archetype.is_dirty());
+        archetype.flush();
+        assert!(!archetype.is_dirty());
         assert!(!archetype.insert(0));
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         archetype.flush();
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(!archetype.insert(1));
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         archetype.flush();
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         archetype
-    }
-
-    #[test]
-    fn owner() {
-        assert_eq!(setup().owner(), Some(OWNER));
     }
 
     #[test]
     fn insert() {
         let mut archetype = setup();
         assert!(archetype.insert(0));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(archetype.has(0));
         assert!(archetype.insert(1));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(archetype.has(1));
         assert!(!archetype.insert(Segment::BITS as usize));
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         assert!(archetype.has(Segment::BITS as usize));
     }
 
@@ -210,30 +196,30 @@ mod tests {
     fn remove() {
         let mut archetype = setup();
         assert!(!archetype.remove(Segment::BITS as usize));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(archetype.has(0));
         assert!(archetype.remove(0));
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         archetype.flush();
         assert!(!archetype.has(0));
         assert!(!archetype.remove(0));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(archetype.has(1));
         assert!(archetype.remove(1));
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         archetype.flush();
         assert!(!archetype.has(1));
         assert!(!archetype.remove(1));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
         assert!(!archetype.remove(Segment::BITS as usize));
-        assert!(!archetype.dirty());
+        assert!(!archetype.is_dirty());
     }
 
     #[test]
     fn clear() {
         let mut archetype = setup();
         archetype.clear();
-        assert!(archetype.dirty());
+        assert!(archetype.is_dirty());
         for i in 0..=Segment::BITS as usize {
             assert!(!archetype.has(i));
         }

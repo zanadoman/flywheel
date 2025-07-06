@@ -40,22 +40,25 @@ impl EntityData {
         self.parent
     }
 
-    pub fn set_parent(&mut self, value: Option<Entity>) -> Result<(), Entity> {
+    pub fn set_parent(&mut self, value: Option<Entity>) -> Result<(), ()> {
         if let Some(value) = value
-            && self.has_child(value)
+            && (value == self.owner || self.has_child(value))
         {
-            Err(value)
+            Err(())
         } else {
             self.parent = value;
             Ok(())
         }
     }
 
-    pub fn insert_child(&mut self, child: Entity) -> Result<(), Entity> {
+    pub fn insert_child(&mut self, child: Entity) -> Result<(), ()> {
+        if child == self.owner {
+            return Err(());
+        }
         if let Some(parent) = self.parent
             && child == parent
         {
-            return Err(child);
+            return Err(());
         }
         if self.sparse.len() <= child.id() {
             self.sparse.resize(child.id() + 1, None);
@@ -99,70 +102,74 @@ impl EntityData {
 mod tests {
     use super::*;
 
-    const OWNER: Entity = Entity::new(0);
-    const PARENT: Entity = Entity::new(1);
-    const ENTITY2: Entity = Entity::new(2);
-    const ENTITY3: Entity = Entity::new(3);
+    const OWNER0: Entity = Entity::new(0);
+    const PARENT1: Entity = Entity::new(1);
+    const CHILD2: Entity = Entity::new(2);
+    const CHILD3: Entity = Entity::new(3);
     const ENTITY4: Entity = Entity::new(4);
 
     #[must_use]
     fn setup() -> EntityData {
-        let mut entity_data = EntityData::new(OWNER);
-        assert!(entity_data.set_parent(Some(PARENT)).is_ok());
-        assert!(entity_data.insert_child(ENTITY2).is_ok());
-        assert!(entity_data.insert_child(ENTITY3).is_ok());
+        let mut entity_data = EntityData::new(OWNER0);
+        assert!(entity_data.set_parent(Some(PARENT1)).is_ok());
+        assert!(entity_data.insert_child(CHILD2).is_ok());
+        assert!(entity_data.insert_child(CHILD3).is_ok());
         entity_data
     }
 
     #[test]
     fn owner() {
-        assert_eq!(setup().owner(), OWNER);
+        assert_eq!(setup().owner(), OWNER0);
     }
 
     #[test]
     fn archetype() {
-        assert!(!setup().archetype().is_dirty());
+        assert!(setup().archetype().is_dirty());
     }
 
     #[test]
     fn archetype_mut() {
-        assert!(!setup().archetype_mut().is_dirty());
+        assert!(setup().archetype_mut().is_dirty());
     }
 
     #[test]
     fn parent() {
-        assert_eq!(setup().parent(), Some(PARENT));
+        assert_eq!(setup().parent(), Some(PARENT1));
     }
 
     #[test]
     fn set_parent() {
         let mut entity_data = setup();
+        assert!(entity_data.set_parent(Some(OWNER0)).is_err());
+        assert_eq!(entity_data.parent(), Some(PARENT1));
         assert!(entity_data.set_parent(Some(ENTITY4)).is_ok());
         assert_eq!(entity_data.parent(), Some(ENTITY4));
-        assert_eq!(entity_data.set_parent(Some(ENTITY2)), Err(ENTITY2));
+        assert!(entity_data.set_parent(Some(CHILD2)).is_err());
         assert_eq!(entity_data.parent(), Some(ENTITY4));
-        entity_data.remove_child(ENTITY2);
-        assert!(entity_data.set_parent(Some(ENTITY2)).is_ok());
-        assert_eq!(entity_data.parent(), Some(ENTITY2));
+        entity_data.remove_child(CHILD2);
+        assert!(entity_data.set_parent(Some(CHILD2)).is_ok());
+        assert_eq!(entity_data.parent(), Some(CHILD2));
     }
 
     #[test]
     fn insert_child() {
         let mut entity_data = setup();
+        assert!(entity_data.insert_child(OWNER0).is_err());
+        assert!(!entity_data.has_child(OWNER0));
         assert!(entity_data.insert_child(ENTITY4).is_ok());
         assert!(entity_data.has_child(ENTITY4));
-        assert_eq!(entity_data.insert_child(PARENT), Err(PARENT));
-        assert!(!entity_data.has_child(PARENT));
+        assert!(entity_data.insert_child(PARENT1).is_err());
+        assert!(!entity_data.has_child(PARENT1));
         assert!(entity_data.set_parent(None).is_ok());
-        assert!(entity_data.insert_child(PARENT).is_ok());
-        assert!(entity_data.has_child(PARENT));
+        assert!(entity_data.insert_child(PARENT1).is_ok());
+        assert!(entity_data.has_child(PARENT1));
     }
 
     #[test]
     fn has_child() {
         let entity_data = setup();
-        assert!(entity_data.has_child(ENTITY2));
-        assert!(entity_data.has_child(ENTITY3));
+        assert!(entity_data.has_child(CHILD2));
+        assert!(entity_data.has_child(CHILD3));
         assert!(!entity_data.has_child(ENTITY4));
     }
 
@@ -170,22 +177,22 @@ mod tests {
     fn children() {
         let entity_data = setup();
         assert_eq!(entity_data.children().len(), 2);
-        assert!(entity_data.children().contains(&ENTITY2));
-        assert!(entity_data.children().contains(&ENTITY3));
+        assert!(entity_data.children().contains(&CHILD2));
+        assert!(entity_data.children().contains(&CHILD3));
     }
 
     #[test]
     fn remove_child() {
         let mut entity_data = setup();
         entity_data.remove_child(ENTITY4);
-        assert!(entity_data.has_child(ENTITY2));
-        entity_data.remove_child(ENTITY2);
-        assert!(!entity_data.has_child(ENTITY2));
-        entity_data.remove_child(ENTITY2);
-        assert!(entity_data.has_child(ENTITY3));
-        entity_data.remove_child(ENTITY3);
-        assert!(!entity_data.has_child(ENTITY3));
-        entity_data.remove_child(ENTITY3);
+        assert!(entity_data.has_child(CHILD2));
+        entity_data.remove_child(CHILD2);
+        assert!(!entity_data.has_child(CHILD2));
+        entity_data.remove_child(CHILD2);
+        assert!(entity_data.has_child(CHILD3));
+        entity_data.remove_child(CHILD3);
+        assert!(!entity_data.has_child(CHILD3));
+        entity_data.remove_child(CHILD3);
         entity_data.remove_child(ENTITY4);
     }
 
@@ -193,11 +200,11 @@ mod tests {
     fn clear() {
         let mut entity_data = setup();
         entity_data.clear();
-        assert_eq!(entity_data.owner(), OWNER);
+        assert_eq!(entity_data.owner(), OWNER0);
         assert!(entity_data.archetype.is_dirty());
         assert!(entity_data.parent().is_none());
-        assert!(!entity_data.has_child(ENTITY2));
-        assert!(!entity_data.has_child(ENTITY3));
+        assert!(!entity_data.has_child(CHILD2));
+        assert!(!entity_data.has_child(CHILD3));
         assert!(entity_data.children().is_empty());
     }
 }
