@@ -111,6 +111,7 @@ mod tests {
     #[must_use]
     fn setup() -> EntityData {
         let mut entity_data = EntityData::new(OWNER0);
+        assert!(!entity_data.archetype_mut().insert(0));
         assert!(entity_data.set_parent(Some(PARENT1)).is_ok());
         assert!(entity_data.insert_child(CHILD2).is_ok());
         assert!(entity_data.insert_child(CHILD3).is_ok());
@@ -124,12 +125,12 @@ mod tests {
 
     #[test]
     fn archetype() {
-        assert!(setup().archetype().is_dirty());
+        assert!(setup().archetype().has(0));
     }
 
     #[test]
     fn archetype_mut() {
-        assert!(setup().archetype_mut().is_dirty());
+        assert!(setup().archetype_mut().has(0));
     }
 
     #[test]
@@ -198,7 +199,6 @@ mod tests {
         let mut entity_data = setup();
         entity_data.clear();
         assert_eq!(entity_data.owner(), OWNER0);
-        assert!(entity_data.archetype.is_dirty());
         assert!(entity_data.parent().is_none());
         assert!(!entity_data.has_child(CHILD2));
         assert!(!entity_data.has_child(CHILD3));
